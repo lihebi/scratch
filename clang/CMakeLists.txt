@@ -35,28 +35,4 @@ add_executable(ast ast.cpp)
 add_executable(token token.cpp)
 # target_link_libraries(token clang clangTooling clangFrontend clangFrontendTool)
 
-# add_executable(loop-convert LoopConvert.cpp)
-# target_link_libraries(loop-convert gtest)
-# target_link_libraries(loop-convert
-#   clang
-#   clangAST
-#   clangASTMatchers
-#   clangBasic
-#   clangDriver
-#   clangEdit
-#   clangFormat
-#   clangFrontend
-#   clangFrontendTool
-#   clangRewriteFrontend
-#   clangStaticAnalyzerFrontend
-#   clangTooling
-#   )
-
-# target_link_libraries(hetok helium)
-
-# Find the libraries that correspond to the LLVM components
-# that we wish to use
-# llvm_map_components_to_libnames(llvm_libs support core irreader)
-
-# Link against LLVM libraries
-# target_link_libraries(loop-convert ${llvm_libs})
+add_executable(rewriter rewriter.cpp)
