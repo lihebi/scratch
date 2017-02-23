@@ -26,8 +26,14 @@ find_package(Clang REQUIRED CONFIG)
 # why I need this??? Otherwise error: undefined reference to typeinfo for xxx
 add_compile_options(-fno-rtti)
 
+# link these by default
+link_libraries(clang clangTooling clangFrontend clangFrontendTool)
+
 add_executable(ast ast.cpp)
-target_link_libraries(ast clang clangTooling clangFrontend clangFrontendTool)
+# target_link_libraries(ast clang clangTooling clangFrontend clangFrontendTool)
+
+add_executable(token token.cpp)
+# target_link_libraries(token clang clangTooling clangFrontend clangFrontendTool)
 
 # add_executable(loop-convert LoopConvert.cpp)
 # target_link_libraries(loop-convert gtest)
