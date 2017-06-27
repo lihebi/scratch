@@ -1,0 +1,16 @@
+apply plugin: 'java'
+
+dependencies {
+    compile files('lib/rcf.jar')
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class' : 'RCFReader'
+    }
+    // add all dependencies into the jar, so that it can be run via
+    // java -jar /path/to/jar
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
