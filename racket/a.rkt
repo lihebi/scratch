@@ -1,6 +1,9 @@
 ;; functions
-(define square (lambda x)
-  (* x x))
+(define square
+  (lambda (x)
+    (* x x)))
+
+(square 2)
 
 ;; control structure
 (if #t 1 2)
