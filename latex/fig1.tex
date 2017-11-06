@@ -208,20 +208,179 @@ This is figure 1.
 \begin{figure*}
   \centering
   \begin{tikzpicture}
-    \node (ide) [draw, minimum width=10cm, minimum height=6cm] {IDE};
+    \node (ide) [draw, minimum width=10cm, minimum height=6cm, align=left] {
+      \begin{lstlisting}[style=base]
+while (var < 100) {
+  if (var > 5) {
+    sum += var / 2;
+    var += 2;
+  } @else@
+    @sum += var;@
+  var++;
+}
+\end{lstlisting}
+      IDE\\
+      Menu:\\
+      - View AST/CFG\\
+      - Show Patch\\
+      - Generate Program\\
+      - Run Test\\
+      - Analyze\\
+    };
     % IDE should have menu
     % IDE should support selection of nodes
     % IDE should output something
-    \node (out1) [draw, rounded corners, anchor=north, right=of ide.north east] {Output 1};
-    \node (out2) [draw, rounded corners, below=of out1] {Output 2};
-    \node (out3) [draw, rounded corners, below=of out2] {Output 3};
-    \node (out4) [draw, rounded corners, below=of out3] {Output 4};
+    \node (ast) [draw, rounded corners, anchor=north, right=of ide.north east,
+      every label quotes/.style={below,white,
+            anchor=west,font=\bfseries\scriptsize, shift={(-1em,-0.5em)}}
+      ] {
+      \begin{forest}
+        [$ifstmt$,
+          [\texttt{if}, "6"][\texttt{(}, "7"]
+          [$expr_2$,
+            [\texttt{var>5}, "8"]]
+          [\texttt{)}, "9"]
+          [$stmt_2$,
+            [$compstmt_2$,
+              [\texttt{\{}, "10"]
+              [$stmt_3$,
+                [\texttt{sum+=var/2;}, "11"]]
+              [$stmt_4$,
+                [\texttt{var += 2;}, "12"]]
+              [\texttt{\}}, "13"]]]
+          [\color{blue}\texttt{else}, "14"]
+          [$stmt_5$,
+            [\color{blue}\texttt{sum+=var;}, "15"]]]
+  \end{forest}
+      };
+    \node (patch) [draw, rounded corners, below=of ast, "Patch"] {
+            \begin{lstlisting}[style=graycode]
+while (var < 100) {
+  @if (var > 5) {@
+    sum += var / 2;
+    var += 2;
+  @}@ else
+    sum += var;
+  var++;
+}
+\end{lstlisting}
+      };
+      \node (gen) [draw, rounded corners, below=of patch] {
+\begin{lstlisting}[]
+int var, sum;
+input(var);
+input(sum);
+if (var > 5) {
+} else
+  sum += var;
+output(var);
+output(sum);
+\end{lstlisting}
+      };
+      \node (test) [draw, rounded corners, below=of gen] {
+        % test input and output
+        \begin{tabular}{c | c | c | c}
+          \toprule
+          $var_{in}$ & $sum_{in}$ & $var_{out}$ & $sum_{out}$\\
+          \midrule\hline
+          1 & 2 & 1 & 3\\
+          10 & -3 & 10 & -3\\
+          .. & .. & .. & ..\\
+          \bottomrule
+        \end{tabular}
+      };
+
+      \node (result) [draw, below=of test, align=left] {
+        Transfer Function:\\
+        $var_{out} = var_{in}$\\
+        % $sum_{out} = sum_{in} + var_{in}$\\
+
+        % $\begin{aligned}
+        %   a + b
+        % \end{aligned}$
+
+        $\begin{aligned}
+          sum_{out} =
+          \begin{cases}
+            sum_{in} & var_{in} > 5\\
+            sum_{in} + var_{in} & otherwise\\
+          \end{cases}
+        \end{aligned}$
+      };
 
 
     
     
   \end{tikzpicture}
 
+\end{figure*}
+
+
+\begin{figure*}
+  \centering
+  \begin{tikzpicture}
+    % Bug Signature
+
+    \node (orig) [draw] {
+      \begin{lstlisting}
+  static boolean 
+  parse_time (const struct parser_table* entry,
+              char *argv[], int *arg_ptr)
+  {
+    struct predicate *our_pred;
+    struct time_val tval;
+    enum comparison_type comp;
+    const char *timearg;
+    const char *errmsg = "arithmetic overflow ...";
+    time_t origin;
+    if (!collect_arg(argv, arg_ptr, &timearg))
+      return false;
+    origin = options.cur_day_start;
+    if (get_comp_type(&timearg, &comp))
+      {
+        if (COMP_LT == tval.kind)      
+          {
+            uintmax_t expected = origin + (DAYSECS-1);
+            origin += (DAYSECS-1);
+            if (origin != expected)
+              {
+                error(1, 0,
+                      _("arithmetic overflow ..."));
+              }
+          }
+      }
+    if (!get_relative_timestamp(timearg, &tval, origin,
+                                DAYSECS, errmsg))
+      return false;
+    // ...
+  }
+\end{lstlisting}
+    };
+
+    \node (sig) [draw, right=of orig.north east, anchor=north west] {
+\begin{lstlisting}
+  static boolean 
+  parse_time (char *argv[], int *arg_ptr)
+  {
+    enum comparison_type comp;
+    const char *timearg;
+    if (get_comp_type(&timearg, &comp)) {}
+    if (!get_relative_timestamp(timearg, &tval, origin,
+                                DAYSECS, errmsg))
+      return false;
+  }
+\end{lstlisting}      
+    };
+    \node (transfer) [draw, below=of sig, align=left] {
+      Failure condition:\\
+      $\quad orig\_timearg = timearg$\\
+      Transfer function:\\
+      $\quad orig\_timearg\_out = arg\_ptr + 1$\\
+      $\quad timearg = arg\_ptr + 1$\\
+      Precondition: $null$\\
+    };
+
+  \end{tikzpicture}
 \end{figure*}
 
 
