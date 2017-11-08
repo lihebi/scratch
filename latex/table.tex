@@ -1,0 +1,28 @@
+% \input{prelude}
+\documentclass[11pt,english,titlepage]{article}
+
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\begin{document}
+
+\begin{table}[htb]
+  \centering
+  \begin{tabular}{l||c|c|c}
+    \hline
+    benchmark & bug type & sign/orig & time (s)\\
+    \hline\hline
+    gzip-1.2.4 & buf-of & 5/5809 (0.09\%) &  9.06\\
+    ncompress-4.2.4 & buf-of & 9/1435 (0.62\%) & 73.7\\
+    polymorph-0.4.0 & buf-of& 6/400 (1.5\%)& 3.4 \\
+    find (66c536bb) & func-bug & 11/10419 (0.11\%) &10.8\\
+    find (07b941b1) & buf-of & 13/9195 (0.14\%) &11.5\\
+    find (183115d0) & res-leak & 16/11739 (0.14\%) & --- \\
+    find (c8491c11) & null deref & 12/10151 (0.12\%) & ---\\
+    grep (db9d6340) & inf-loop & 16/31724 (0.05\%) &---\\
+    \hline
+  \end{tabular}
+\end{table}
+
+\end{document}
+
