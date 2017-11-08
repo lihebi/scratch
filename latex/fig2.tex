@@ -1,0 +1,230 @@
+\input{prelude}
+\begin{document}
+
+
+\section{geneal goal of the framework}
+
+
+\section{Modify the example code clone and delta debugging}
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}
+    %% sibling distance defaults to 15mm
+    \matrix[
+    anchor=north west,
+    column sep=2em,
+    % inner sep=0em,
+    % outer sep=0em
+    ] {
+    \node [draw] {
+        \noindent\begin{minipage}{.45\linewidth}
+\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
+  } else if (bits & 1<<1) {
+    out = bits;
+    while (out & 1<<3) {
+      out >>= 1;
+\end{lstlisting}
+          \end{minipage}
+    };&
+    \node [draw] {
+        \noindent\begin{minipage}{.45\linewidth}
+\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
+  } else if (bits & 1<<1) {
+    out = bits;
+    while (out & 1<<2
+     || out & 1<<3) {
+      out >>= 1;
+\end{lstlisting}
+          \end{minipage}
+    };\\
+      \node [""] {
+        \noindent\begin{minipage}{.45\linewidth}
+\begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left]
+int main() {
+  int bits, out;
+  input(bits);
+\end{lstlisting}
+\begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, firstnumber=4]
+  if (bits & 1) {
+\end{lstlisting}
+          $\qquad\cdots$
+\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
+  } else if (bits & 1<<1) {
+    out = bits;
+    while (out & 1<<3) {
+      out >>= 1;
+\end{lstlisting}
+          \begin{lstlisting}[style=base, numbers=left, firstnumber=9, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
+    }
+  }
+\end{lstlisting}
+          \begin{lstlisting}[style=base, numbers=left, firstnumber=11]
+  output(bits);
+  output(out);
+}
+\end{lstlisting}
+\end{minipage}
+};&
+\node [""] {
+  \noindent\begin{minipage}{.45\linewidth}
+\begin{lstlisting}[label=lst-iclones-6,style=base, numbers=left]
+int main() {
+  int bits, out;
+  input(bits);
+\end{lstlisting}
+    \begin{lstlisting}[style=base, numbers=left, firstnumber=4, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
+  if (bits & 1) {
+\end{lstlisting}
+          $\qquad\cdots$
+\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
+  } else if (bits & 1<<1) {
+    out = bits;
+    while (out & 1<<2
+     || out & 1<<3) {
+      out >>= 1;
+\end{lstlisting}
+    \begin{lstlisting}[style=base, numbers=left, firstnumber=10, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
+    }
+  }
+\end{lstlisting}
+    \begin{lstlisting}[style=base, numbers=left, firstnumber=12]
+  output(bits);
+  output(out);
+}
+\end{lstlisting}
+    \end{minipage}
+  };\\
+  \node [] {
+    \begin{minipage}{.45\linewidth}
+    input:\hspace{1.6mm} $bits=2$\\
+    output: $out_1=2, out_2=2$\\
+    \end{minipage}
+  }; &
+  \node [] {
+    \begin{minipage}{.45\linewidth}
+      input:\hspace{1.6mm} $bits = 6$\\
+      output: $out_1=6, out_2=3$\\
+    \end{minipage}
+  }; \\
+};
+  \end{tikzpicture}
+  \caption{Adapted from code clone reported by iClones for mdp project (https://github.com/visit1985/mdp).\label{fig:iclones-example}}
+\end{figure}
+
+
+\begin{figure}[t]
+  \centering
+  \noindent
+
+  \begin{tikzpicture}
+    % \draw [help lines, gray!30] (0,0) grid (10,10);
+
+    \matrix (code) [anchor=west,
+      draw,
+      every node/.style={
+        text width=6cm,
+        % draw,
+        inner sep=0,
+        outer sep=0
+      },
+      "Source Code and Revision" below
+      ] {
+      \node {
+\begin{lstlisting}[style=base, numbers=left]
+int l = 0; wchar_t *c = text;
+cstack_t *stack = cstack_init();
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, numbers=left, firstnumber=3]
+1+ if((stack->top)(stack, *c)) {
+1+   if(*c == L'\\') l++;
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, numbers=left, firstnumber=5]
+2+    (stack->pop)(stack);
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, numbers=left, firstnumber=6]
+1+ }
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}, numbers=left, firstnumber=7]
+3+ else
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, numbers=left, firstnumber=8]
+4+ if(~1strcpy(buf, stack->buf)~1) // cause
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}, numbers=left, firstnumber=9]
+3+ {
+3+  (stack->pop)(stack);
+3+ }
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, numbers=left, firstnumber=12]
+5+ else {
+5+  (stack->push)(stack, *c);
+5+ }
+\end{lstlisting}
+      };\\
+    };
+
+    % \draw (code.north) -- (10,0);
+
+    \node (helium) [right=of code.north east, anchor=north west, "Helium Output" below] {
+      \small
+      \begin{tabular}{c | c | l}
+        \toprule
+        Commit & Dep & Closure\\
+        \midrule
+        1 & & \\
+        2 & & 2\\
+        3 & 1 & 1 3\\
+        4 & 3 & 1 3 4\\
+        5 & 4 & 1 3 4 5\\
+        \bottomrule
+      \end{tabular}
+    };
+
+    \node [right=of code.south east,
+      shift={($(helium.north) - (code.north east)$)},
+      anchor=south east, "Delta Debugging Conf Table" below] {
+      \small
+      \begin{tabular}{c|c}
+        \toprule
+        conf & OK?\\
+        \midrule
+        1 2 3 . . & $\checkmark$ \\
+        . . . 4 5& $\times$ \\
+        1 2 . 4 5& $\times$ \\
+        . . 3 4 5& $\times$ \\
+        1 2 3 4 .& $\checkmark$\\
+        1 2 3 . 5& $\times$\\
+        % 1 2 3 4 5& $\checkmark$\\
+        
+        \bottomrule
+      \end{tabular}
+    };
+  \end{tikzpicture}
+  % \begin{minipage}{.70\linewidth}
+    % \end{minipage}
+  \caption{Delta Debugging Example adapted from mdp project (https://github.com/visit1985/mdp).\label{fig:example-delta} }
+\end{figure}
+
+
+
+\section{Bug Signature real example}
+\section{How to compute bug signature}
+
+
+\section{Bug signature of four types}
+\end{document}
