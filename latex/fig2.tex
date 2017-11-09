@@ -9,110 +9,110 @@
 
 
 
-\begin{figure}[t]
-  \centering
-  \begin{tikzpicture}
-    %% sibling distance defaults to 15mm
-    \matrix[
-    anchor=north west,
-    column sep=2em,
-    % inner sep=0em,
-    % outer sep=0em
-    ] {
-    \node [draw] {
-        \noindent\begin{minipage}{.45\linewidth}
-\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
-  } else if (bits & 1<<1) {
-    out = bits;
-    while (out & 1<<3) {
-      out >>= 1;
-\end{lstlisting}
-          \end{minipage}
-    };&
-    \node [draw] {
-        \noindent\begin{minipage}{.45\linewidth}
-\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
-  } else if (bits & 1<<1) {
-    out = bits;
-    while (out & 1<<2
-     || out & 1<<3) {
-      out >>= 1;
-\end{lstlisting}
-          \end{minipage}
-    };\\
-      \node [""] {
-        \noindent\begin{minipage}{.45\linewidth}
-\begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left]
-int main() {
-  int bits, out;
-  input(bits);
-\end{lstlisting}
-\begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, firstnumber=4]
-  if (bits & 1) {
-\end{lstlisting}
-          $\qquad\cdots$
-\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
-  } else if (bits & 1<<1) {
-    out = bits;
-    while (out & 1<<3) {
-      out >>= 1;
-\end{lstlisting}
-          \begin{lstlisting}[style=base, numbers=left, firstnumber=9, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
-    }
-  }
-\end{lstlisting}
-          \begin{lstlisting}[style=base, numbers=left, firstnumber=11]
-  output(bits);
-  output(out);
-}
-\end{lstlisting}
-\end{minipage}
-};&
-\node [""] {
-  \noindent\begin{minipage}{.45\linewidth}
-\begin{lstlisting}[label=lst-iclones-6,style=base, numbers=left]
-int main() {
-  int bits, out;
-  input(bits);
-\end{lstlisting}
-    \begin{lstlisting}[style=base, numbers=left, firstnumber=4, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
-  if (bits & 1) {
-\end{lstlisting}
-          $\qquad\cdots$
-\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
-  } else if (bits & 1<<1) {
-    out = bits;
-    while (out & 1<<2
-     || out & 1<<3) {
-      out >>= 1;
-\end{lstlisting}
-    \begin{lstlisting}[style=base, numbers=left, firstnumber=10, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
-    }
-  }
-\end{lstlisting}
-    \begin{lstlisting}[style=base, numbers=left, firstnumber=12]
-  output(bits);
-  output(out);
-}
-\end{lstlisting}
-    \end{minipage}
-  };\\
-  \node [] {
-    \begin{minipage}{.45\linewidth}
-    input:\hspace{1.6mm} $bits=2$\\
-    output: $out_1=2, out_2=2$\\
-    \end{minipage}
-  }; &
-  \node [] {
-    \begin{minipage}{.45\linewidth}
-      input:\hspace{1.6mm} $bits = 6$\\
-      output: $out_1=6, out_2=3$\\
-    \end{minipage}
-  }; \\
-};
-  \end{tikzpicture}
-  \caption{Adapted from code clone reported by iClones for mdp project (https://github.com/visit1985/mdp).\label{fig:iclones-example}}
-\end{figure}
+% \begin{figure}[t]
+%   \centering
+%   \begin{tikzpicture}
+%     %% sibling distance defaults to 15mm
+%     \matrix[
+%     anchor=north west,
+%     column sep=2em,
+%     % inner sep=0em,
+%     % outer sep=0em
+%     ] {
+%     \node [draw] {
+%         \noindent\begin{minipage}{.45\linewidth}
+% \begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
+%   } else if (bits & 1<<1) {
+%     out = bits;
+%     while (out & 1<<3) {
+%       out >>= 1;
+% \end{lstlisting}
+%           \end{minipage}
+%     };&
+%     \node [draw] {
+%         \noindent\begin{minipage}{.45\linewidth}
+% \begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
+%   } else if (bits & 1<<1) {
+%     out = bits;
+%     while (out & 1<<2
+%      || out & 1<<3) {
+%       out >>= 1;
+% \end{lstlisting}
+%           \end{minipage}
+%     };\\
+%       \node [""] {
+%         \noindent\begin{minipage}{.45\linewidth}
+% \begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left]
+% int main() {
+%   int bits, out;
+%   input(bits);
+% \end{lstlisting}
+% \begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, firstnumber=4]
+%   if (bits & 1) {
+% \end{lstlisting}
+%           $\qquad\cdots$
+% \begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
+%   } else if (bits & 1<<1) {
+%     out = bits;
+%     while (out & 1<<3) {
+%       out >>= 1;
+% \end{lstlisting}
+%           \begin{lstlisting}[style=base, numbers=left, firstnumber=9, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
+%     }
+%   }
+% \end{lstlisting}
+%           \begin{lstlisting}[style=base, numbers=left, firstnumber=11]
+%   output(bits);
+%   output(out);
+% }
+% \end{lstlisting}
+% \end{minipage}
+% };&
+% \node [""] {
+%   \noindent\begin{minipage}{.45\linewidth}
+% \begin{lstlisting}[label=lst-iclones-6,style=base, numbers=left]
+% int main() {
+%   int bits, out;
+%   input(bits);
+% \end{lstlisting}
+%     \begin{lstlisting}[style=base, numbers=left, firstnumber=4, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
+%   if (bits & 1) {
+% \end{lstlisting}
+%           $\qquad\cdots$
+% \begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
+%   } else if (bits & 1<<1) {
+%     out = bits;
+%     while (out & 1<<2
+%      || out & 1<<3) {
+%       out >>= 1;
+% \end{lstlisting}
+%     \begin{lstlisting}[style=base, numbers=left, firstnumber=10, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
+%     }
+%   }
+% \end{lstlisting}
+%     \begin{lstlisting}[style=base, numbers=left, firstnumber=12]
+%   output(bits);
+%   output(out);
+% }
+% \end{lstlisting}
+%     \end{minipage}
+%   };\\
+%   \node [] {
+%     \begin{minipage}{.45\linewidth}
+%     input:\hspace{1.6mm} $bits=2$\\
+%     output: $out_1=2, out_2=2$\\
+%     \end{minipage}
+%   }; &
+%   \node [] {
+%     \begin{minipage}{.45\linewidth}
+%       input:\hspace{1.6mm} $bits = 6$\\
+%       output: $out_1=6, out_2=3$\\
+%     \end{minipage}
+%   }; \\
+% };
+%   \end{tikzpicture}
+%   \caption{Adapted from code clone reported by iClones for mdp project (https://github.com/visit1985/mdp).\label{fig:iclones-example}}
+% \end{figure}
 
 
 
@@ -130,7 +130,9 @@ int main() {
       ]
     % \draw [help lines, gray!30] (0,0) grid (10,10);
 
-    \matrix (clone1) [anchor=west,
+    \matrix (clone) [
+      anchor=north west,
+      column sep=20pt,
       % draw,
       every node/.style={text width=4cm,
         inner sep=0,
@@ -144,57 +146,7 @@ int main() {
     while (out & 1<<3) {
       out >>= 1;
 \end{lstlisting}
-      };\\
-      \node {
-\begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left]
-int main() {
-  int bits, out;
-  input(bits);
-\end{lstlisting}
-      };\\
-      \node {
-\begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, firstnumber=4]
-  if (bits & 1) {
-\end{lstlisting}
-      };\\
-      \node {
-        $\qquad\cdots$
-      };\\
-      \node {
-\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
-  } else if (bits & 1<<1) {
-    out = bits;
-    while (out & 1<<3) {
-      out >>= 1;
-\end{lstlisting}
-      };\\
-      \node {
-          \begin{lstlisting}[style=base, numbers=left, firstnumber=9, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
-    }
-  }
-\end{lstlisting}
-      };\\
-      \node {
-          \begin{lstlisting}[style=base, numbers=left, firstnumber=11]
-  output(bits);
-  output(out);
-}
-\end{lstlisting}
-      };\\
-      \node [align=left] {
-        input:\hspace{1.6mm} $bits=2$\\
-        output: $out_1=2, out_2=2$\\
-      };\\
-    };
-    \matrix (clone2) [
-      right=15pt of clone1.north east,
-      matrix anchor=north west,
-      % draw,
-      every node/.style={text width=4cm,
-        inner sep=0,
-        outer sep=0
-      }
-      ] {
+      };&
       \node [draw] {
 \begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
   } else if (bits & 1<<1) {
@@ -205,6 +157,13 @@ int main() {
 \end{lstlisting}
       };\\
       \node {
+\begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left]
+int main() {
+  int bits, out;
+  input(bits);
+\end{lstlisting}
+      };&
+      \node {
 \begin{lstlisting}[label=lst-iclones-6,style=base, numbers=left]
 int main() {
   int bits, out;
@@ -212,13 +171,29 @@ int main() {
 \end{lstlisting}
       };\\
       \node {
+\begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, firstnumber=4]
+  if (bits & 1) {
+\end{lstlisting}
+      };&
+      \node {
     \begin{lstlisting}[style=base, numbers=left, firstnumber=4, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
   if (bits & 1) {
 \end{lstlisting}
       };\\
       \node {
         $\qquad\cdots$
+      };&
+      \node {
+        $\qquad\cdots$
       };\\
+      \node {
+\begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
+  } else if (bits & 1<<1) {
+    out = bits;
+    while (out & 1<<3) {
+      out >>= 1;
+\end{lstlisting}
+      };&
       \node {
 \begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}]
   } else if (bits & 1<<1) {
@@ -229,29 +204,43 @@ int main() {
 \end{lstlisting}
       };\\
       \node {
+          \begin{lstlisting}[style=base, numbers=left, firstnumber=9, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
+    }
+  }
+\end{lstlisting}
+      };&
+      \node {
     \begin{lstlisting}[style=base, numbers=left, firstnumber=10, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}]
     }
   }
 \end{lstlisting}
       };\\
       \node {
+          \begin{lstlisting}[style=base, numbers=left, firstnumber=11]
+  output(bits);
+  output(out);
+}
+\end{lstlisting}
+      };&
+      \node {
     \begin{lstlisting}[style=base, numbers=left, firstnumber=12]
   output(bits);
   output(out);
 }
 \end{lstlisting}
-      };\\
+      };\\[10pt]
+      \node [align=left] {
+        input:\hspace{1.6mm} $bits=2$\\
+        output: $out_1=2, out_2=2$\\
+      };&
       \node [align=left] {
         input:\hspace{1.6mm} $bits = 6$\\
         output: $out_1=6, out_2=3$\\
       }; \\
     };
 
-    
-    
-
     \matrix (code) [anchor=west,
-      right=15pt of clone2.north east,
+      right=15pt of clone.north east,
       matrix anchor=north west,
       % draw,
       every node/.style={
@@ -351,7 +340,10 @@ cstack_t *st = init();
   \end{tikzpicture}
   % \begin{minipage}{.70\linewidth}
     % \end{minipage}
-  \caption{Delta Debugging Example adapted from mdp project (https://github.com/visit1985/mdp).\label{fig:example-delta} }
+  \caption{Clone example adapted from code clone reported by iClones
+    for mdp project (https://github.com/visit1985/mdp). Delta
+    Debugging Example adapted from mdp project
+    (https://github.com/visit1985/mdp)}
 \end{figure}
 
 
@@ -375,110 +367,6 @@ cstack_t *st = init();
 %   get_relative_timestamp(timearg, &tval,
 %     origin, DAYSECS, errmsg);
 % \end{lstlisting}
-
-\begin{figure*}
-  \begin{tikzpicture}
-    \matrix (m) [
-      draw,
-      matrix anchor=north,
-      every node/.style={
-        % draw,
-        anchor=north west, text width=4cm}] {
-      \node (c1) ["find 66c536bb Functional Bug"]{
-        \begin{lstlisting}
-static boolean 
-parse_time (char *argv[], int *arg_ptr) {
-  enum comparison_type comp;
-  const char *timearg;
-  ...
-  if (get_comp_type(&timearg, &comp))
-    {...}
-  ...
-  if (!get_relative_timestamp
-         (timearg, &tval))
-    return false;
-}
-\end{lstlisting}
-      };&
-      \node (c2) ["find2 07b941b1 Buf-overflow"] {
-        \begin{lstlisting}
-static boolean
-parse_regex (char **argv, int *arg_ptr) {
-  return insert_regex (argv, arg_ptr, entry);
-}
-static boolean
-insert_regex (char **argv, int *arg_ptr, parser_table *entry, int regex_options) {
-  struct re_pattern_buffer *re;
-  const char *error_message;
-  (*arg_ptr)++;
-  estimate_pattern_match_rate(argv[*arg_ptr], 1);
-}
-\end{lstlisting}
-      };&
-      \node (c3) ["find3 183115d0 Resource Leak"] {
-        \begin{lstlisting}
-bool
-pred_execdir (char *pathname, predicate *pred_ptr) {
-  return impl_pred_exec(pathname, pred_ptr);
-}
-static bool
-impl_pred_exec (const char *pathname, predicate *pred_ptr) {
-  exec_val *execp = &pred_ptr->args.exec_vec;
-  if (!record_exec_dir (execp)) {}
-}
-\end{lstlisting}
-      };&
-      \node (c4) ["find4 c8491c11 Null-deref"] {
-        \begin{lstlisting}
-static boolean
-parse_newerXY (parser_table* entry, char **argv, int *arg_ptr) {
-  ...
-  (*arg_ptr)++;
-  ... { ...
-    quotearg_n_style(0, options.err_quoting_style, argv[*arg_ptr]);
-  ... } ...
-}
-\end{lstlisting}
-      };\\
-      \node (f1) {
-        Failure condition:\\
-        \texttt{orig_timearg = timearg}\\
-        Transfer function:\\
-        \texttt{orig_timearg_out = arg_ptr + 1}\\
-        \texttt{timearg = arg_ptr + 1}\\
-        Precondition: \texttt{null}\\
-      };&
-      \node (f2) {
-        Failure condition:\\
-        \texttt{*arg_ptr >= sizeof(argv)}\\
-        Transfer function:\\
-        \texttt{*arg_ptr = (*arg_ptr_in) +1}\\
-        \texttt{sizeof(argv) = sizeof(argv_in)}\\
-        Precondition: \texttt{*arg_ptr_IN >= sizeof(argv_in)-1}
-      };&
-      \node (f3) {
-        Failure condition:\\
-        \texttt{fcntl(execp->wd_for_exec->desc, F_GETFD) == -1}\\
-        Transfer function:\\
-        \texttt{execp->wd_for_exec->desc = open(execp_IN->wd_for_exec->desc)}\\
-        Precondition: null\\
-      };&
-      \node (f4) {
-        Failure condition:
-        \texttt{argv[*arg_ptr] == NULL}\\
-        Transfer function:
-        \texttt{*arg_ptr = (*arg_ptr_IN) + 1}\\
-        Precondition:
-        \texttt{argv[*arg_ptr_IN+1] = NULL}\\
-      };\\
-    };
-    \draw [dotted] (c1.north west) -- (c4.north east);
-    \draw [dotted] (f1.north west) -- (f4.north east);
-    \foreach \x in {1,2,3,4}
-    \draw [dotted] (c\x.north east |- m.north) -- (f\x.south east |- m.south);
-  \end{tikzpicture}
-  \caption{Bug signature of four types}
-\end{figure*}
 
 % TODO \section{geneal goal of the framework}
 % TODO \section{Bug Signature real example}

@@ -1,0 +1,115 @@
+\input{prelude}
+
+
+
+\begin{document}
+
+\title{Test}
+
+
+
+\begin{figure*}
+  \begin{tikzpicture}
+    \matrix (m) [
+      draw,
+      matrix anchor=north,
+      every node/.style={
+        % draw,
+        anchor=north west, text width=4cm}] {
+      \node (c1) ["find 66c536bb Functional Bug"]{
+        \begin{lstlisting}
+static boolean 
+parse_time (char *argv[], int *arg_ptr) {
+  enum comparison_type comp;
+  const char *timearg;
+  ...
+  if (get_comp_type(&timearg, &comp))
+    {...}
+  ...
+  if (!get_relative_timestamp
+         (timearg, &tval))
+    return false;
+}
+\end{lstlisting}
+      };&
+      \node (c2) ["find2 07b941b1 Buf-overflow"] {
+        \begin{lstlisting}
+static boolean
+parse_regex (char **argv, int *arg_ptr) {
+  return insert_regex (argv, arg_ptr, entry);
+}
+static boolean
+insert_regex (char **argv, int *arg_ptr, parser_table *entry, int regex_options) {
+  struct re_pattern_buffer *re;
+  const char *error_message;
+  (*arg_ptr)++;
+  estimate_pattern_match_rate(argv[*arg_ptr], 1);
+}
+\end{lstlisting}
+      };&
+      \node (c3) ["find3 183115d0 Resource Leak"] {
+        \begin{lstlisting}
+bool
+pred_execdir (char *pathname, predicate *pred_ptr) {
+  return impl_pred_exec(pathname, pred_ptr);
+}
+static bool
+impl_pred_exec (const char *pathname, predicate *pred_ptr) {
+  exec_val *execp = &pred_ptr->args.exec_vec;
+  if (!record_exec_dir (execp)) {}
+}
+\end{lstlisting}
+      };&
+      \node (c4) ["find4 c8491c11 Null-deref"] {
+        \begin{lstlisting}
+static boolean
+parse_newerXY (parser_table* entry, char **argv, int *arg_ptr) {
+  ...
+  (*arg_ptr)++;
+  ... { ...
+    quotearg_n_style(0, options.err_quoting_style, argv[*arg_ptr]);
+  ... } ...
+}
+\end{lstlisting}
+      };\\
+      \node (f1) {
+        Failure condition:\\
+        \texttt{orig_timearg = timearg}\\
+        Transfer function:\\
+        \texttt{orig_timearg_out = arg_ptr + 1}\\
+        \texttt{timearg = arg_ptr + 1}\\
+        Precondition: \texttt{null}\\
+      };&
+      \node (f2) {
+        Failure condition:\\
+        \texttt{*arg_ptr >= sizeof(argv)}\\
+        Transfer function:\\
+        \texttt{*arg_ptr = (*arg_ptr_in) +1}\\
+        \texttt{sizeof(argv) = sizeof(argv_in)}\\
+        Precondition: \texttt{*arg_ptr_IN >= sizeof(argv_in)-1}
+      };&
+      \node (f3) {
+        Failure condition:\\
+        \texttt{fcntl(execp->wd_for_exec->desc, F_GETFD) == -1}\\
+        Transfer function:\\
+        \texttt{execp->wd_for_exec->desc = open(execp_IN->wd_for_exec->desc)}\\
+        Precondition: null\\
+      };&
+      \node (f4) {
+        Failure condition:
+        \texttt{argv[*arg_ptr] == NULL}\\
+        Transfer function:
+        \texttt{*arg_ptr = (*arg_ptr_IN) + 1}\\
+        Precondition:
+        \texttt{argv[*arg_ptr_IN+1] = NULL}\\
+      };\\
+    };
+    \draw [dotted] (c1.north west) -- (c4.north east);
+    \draw [dotted] (f1.north west) -- (f4.north east);
+    \foreach \x in {1,2,3,4}
+    \draw [dotted] (c\x.north east |- m.north) -- (f\x.south east |- m.south);
+  \end{tikzpicture}
+  \caption{Bug signature of four types}
+\end{figure*}
+
+\end{document}
