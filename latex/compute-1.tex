@@ -1,0 +1,119 @@
+\input{prelude}
+
+\title{How to compute}
+% \lstset{numbers=left}
+\begin{document}
+
+\begin{figure*}
+  \centering
+  \begin{tikzpicture}[every label quotes/.style={left, font=\footnotesize},
+      cfg/.style={draw,rectangle,rounded corners},
+      tf/.style={text=\scriptsize},
+      trans/.style={align=center,draw,rounded corners,rectangle
+        split,rectangle split parts=2,draw,dashed,fill=gray!10!white,minimum width=5cm,font=\scriptsize\bfseries},
+      bench/.style={draw,fill=gray!20!white},
+      slice/.style={draw,ultra thick},
+      merge label/.style={red,font=\scriptsize\bfseries,draw,rotate=-45,label position=40},
+      every label/.style={font=\normalsize},
+      num/.style={draw,circle},
+      label position={0},
+      font=\bfseries,
+      ]
+
+    \matrix (full) [
+      matrix anchor=north east,
+      every node/.style={
+        % draw,
+        inner ysep=0,
+        text width=5cm,
+        % inner xsep=10pt,
+      },
+      % column sep=3pt,
+      anchor=north west,
+      every label quotes/.style={below,font=\footnotesize},
+      % align=center,
+      % column sep=10pt,
+      % draw
+      ] {
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=1]
+char *buf,*s,*a,*b;
+char glob_buf[1024];
+\end{lstlisting}
+      };&
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=1]
+char *buf,*s,*a,*b;
+char glob_buf[1024];
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=3]
+void main(int argc,char *argv){
+  @a=argv[1]; b=argv[2];@
+  strcpy(buf, "short");
+  @strcat(a,b);@
+\end{lstlisting}
+      };&
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=3]
+void main(int argc,char *argv){
+  a=argv[1]; b=argv[2];
+
+  strcat(a,b);
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=7]
+  if (strlen(b)<1024) s=b;
+  else @s=a;@
+\end{lstlisting}
+      };&
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=7]
+
+  s=a;
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=9]
+  z=x+y;
+\end{lstlisting}
+      };&
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=9]
+  @@
+\end{lstlisting}
+      };\\
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=10]
+  @if (c>0) {@
+    @buf=malloc(1024);@
+    @} else {@
+    @buf=glob_buf;}@
+  ~1strcpy(buf,s);~1
+}
+\end{lstlisting}
+      };&
+      \node {
+\begin{lstlisting}[numbers=left, firstnumber=10]
+  if (c>0) {
+    buf=malloc(1024);
+  } else {
+    buf=glob_buf;}
+  ~1strcpy(buf,s);~1
+}
+\end{lstlisting}
+      };\\
+      % \node [align=left] {
+      %   \quad \quad Original Program
+      % };&
+      % \node [align=left] {
+      %   \quad \quad Bug Signature
+      % };\\
+    };
+  \end{tikzpicture}
+  \caption{Original \& Bug Signature Program}
+\end{figure*}
+
+\end{document}

@@ -25,6 +25,7 @@
       ->
       % draw,
       ] {main/\texttt{main}["1"]
+      -> "\ldots"[draw=none, font=\bf\Huge]
       -> "\texttt{a=argv[1];b=argv[2];}"[bench, slice, "2"]
       -> strcpy/"\texttt{strcpy(buf,"short")}"[slice,"3"]
       -> "\texttt{strcat(a,b)}"[bench,slice,"4"]
@@ -45,108 +46,15 @@
       -> poi/"\texttt{strcpy(buf,s)}"[bench,slice,"12"]
     };
     
-    \matrix (full) [
-      left=2.5cm of main.north,
-      matrix anchor=north east,
-      every node/.style={
-        % draw,
-        inner ysep=0,
-        text width=5cm,
-        % inner xsep=10pt,
-      },
-      % column sep=3pt,
-      anchor=north west,
-      every label quotes/.style={below,font=\footnotesize},
-      % align=center,
-      % column sep=10pt,
-      % draw
-      ] {
-
-      %% I'm going to split the code into parts
-
-      \node {
-\begin{lstlisting}
-char *buf,*s,*a,*b;
-char glob_buf[1024];
-\end{lstlisting}        
-      };&
-      \node {
-\begin{lstlisting}
-char *buf,*s,*a,*b;
-char glob_buf[1024];
-\end{lstlisting}
-      };\\
-      \node {
-\begin{lstlisting}
-void main(int argc,char *argv){
-  @a=argv[1]; b=argv[2];@
-  strcpy(buf, "short");
-  @strcat(a,b);@
-\end{lstlisting}
-      };&
-      \node {
-\begin{lstlisting}
-void main(int argc,char *argv){
-  a=argv[1]; b=argv[2];
-
-  strcat(a,b);
-\end{lstlisting}
-      };\\
-      \node {
-\begin{lstlisting}
-if (strlen(b)<1024) s=b;
-else @s=a;@
-\end{lstlisting}
-      };&
-      \node {
-\begin{lstlisting}
-
-s=a;
-\end{lstlisting}
-      };\\
-      \node {
-\begin{lstlisting}
-z=x+y;
-\end{lstlisting}
-      };&
-      \node {
-\begin{lstlisting}
-\end{lstlisting}
-      };\\
-      \node {
-\begin{lstlisting}
-@if (c>0) {@
-  @buf=malloc(1024);@
-  @} else {@
-  @buf=glob_buf;}@
-~1strcpy(buf,s);~1
-}
-\end{lstlisting}
-      };&
-      \node {
-\begin{lstlisting}
-if (c>0) {
-  buf=malloc(1024);
-} else {
-  buf=glob_buf;}
-~1strcpy(buf,s);~1
-}
-\end{lstlisting}
-      };\\
-      \node [align=center] {
-        Original Program
-      };&
-      \node [align=center] {
-        Bug Signature
-      };\\
-    };
-    % \draw (0,0) grid (10,10);
 
     \matrix (gen) [
-      matrix anchor=north west,
-      "Generated Program w/ Transfer function \& Infered Pre-conditions"
-      {below, font=\normalsize\bf},
-      below=0pt of full.south west,
+      left=2.5cm of main.north,
+      % shift up
+      yshift=5mm,
+      matrix anchor=north east,
+      % "Generated Program w/ Transfer function \& Infered Pre-conditions"
+      % {below, font=\normalsize\bf},
+      % below=0pt of full.south west,
       % draw,
       % matrix of nodes,
       every node/.style={
@@ -162,8 +70,7 @@ if (c>0) {
 int main() {
   in(buf,s);
   out(buf,s);
-  ~1strcpy(buf,s);~1
-}
+  ~1strcpy(buf,s);~1}
 \end{lstlisting}        
       };&
       \node {
@@ -173,8 +80,7 @@ int main() {
   in(buf,s);
   @buf=malloc(1024);@
   out(buf,s);
-  ~1strcpy(buf,s);~1
-}
+  ~1strcpy(buf,s);~1}
 \end{lstlisting}        
       };\\
       \node  (t1) {
@@ -192,8 +98,7 @@ int main() {
   in(buf,s);
   @buf=glob_buf;@
   out(buf,s);
-  ~1strcpy(buf,s);~1
-}
+  ~1strcpy(buf,s);~1}
 \end{lstlisting}        
       };&
       \node {
@@ -205,8 +110,7 @@ int main() {
   if (c>0) buf=malloc(1024);
   else buf=glob_buf;
   out(buf,s);
-  ~1strcpy(buf,s);~1
-}
+  ~1strcpy(buf,s);~1}
 \end{lstlisting}        
       };\\
       \node (t2) {
@@ -226,8 +130,7 @@ int main() {
   if (c>0) buf=malloc(1024);
   else buf=glob_buf;
   out(buf,s);
-  ~1strcpy(buf,s);~1
-}
+  ~1strcpy(buf,s);~1}
 \end{lstlisting}
       };&
       \node {
@@ -241,8 +144,7 @@ int main() {
   if (c>0) buf=malloc(1024);
   else buf=glob_buf;
   out(buf,s);
-  ~1strcpy(buf,s);~1
-}
+  ~1strcpy(buf,s);~1}
 \end{lstlisting}
       };\\
       \node {
@@ -257,13 +159,15 @@ int main() {
     };
 
     % \draw (gen-1-1) -- (gen-1-2);
-    \draw [double, thick] (full.north west) -- (full.north east);
-    \draw [double, thick] (full.south west) -- (full.south east);
+    % \draw [double, thick] (full.north west) -- (full.north east);
+    % \draw [double, thick] (full.south west) -- (full.south east);
     \draw (t1.south -| gen.west) -- (t1.south -| gen.east);
     \draw (t2.south -| gen.west) -- (t2.south -| gen.east);
-    \draw [double, thick] (t3.south -| gen.west) -- (t3.south -| gen.east);
+    % \draw [double, thick] (t3.south -| gen.west) -- (t3.south -| gen.east);
     
   \end{tikzpicture}
+  \caption{Generated Program w/ Transfer function \& Infered
+    Pre-conditions \& Control Flow Graph}
 \end{figure*}
 
 \end{document}
