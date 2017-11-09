@@ -16,100 +16,103 @@
       every node/.style={
         % draw,
         anchor=north west, text width=4cm}] {
-      \node (c1) ["find 66c536bb Functional Bug"]{
+      \node (c1) ["Functional Bug (66c536bb)"]{
         \begin{lstlisting}
 static boolean 
 parse_time (char *argv[], int *arg_ptr) {
-  enum comparison_type comp;
+  enum comparison comp;
   const char *timearg;
-  ...
-  if (get_comp_type(&timearg, &comp))
-    {...}
-  ...
-  if (!get_relative_timestamp
+  if (get_comp_type(&timearg, &comp)) {}
+  @ASSERT(timearg == timearg_orig);@
+  if (!get_rel_timestamp
          (timearg, &tval))
     return false;
 }
 \end{lstlisting}
       };&
-      \node (c2) ["find2 07b941b1 Buf-overflow"] {
+      \node (c2) ["Buffer overflow (07b941b1)"] {
         \begin{lstlisting}
 static boolean
 parse_regex (char **argv, int *arg_ptr) {
   return insert_regex (argv, arg_ptr, entry);
 }
 static boolean
-insert_regex (char **argv, int *arg_ptr, parser_table *entry, int regex_options) {
-  struct re_pattern_buffer *re;
-  const char *error_message;
+insert_regex (char **argv, int *arg_ptr) {
+  struct re_pattern *re;
   (*arg_ptr)++;
-  estimate_pattern_match_rate(argv[*arg_ptr], 1);
+  @ASSERT(*arg_ptr < sizeof(argv));@
+  est_pat_mat_rate
+    (argv[*arg_ptr], 1);
 }
 \end{lstlisting}
       };&
-      \node (c3) ["find3 183115d0 Resource Leak"] {
+      \node (c3) ["Resource Leak (183115d0)"] {
         \begin{lstlisting}
 bool
-pred_execdir (char *pathname, predicate *pred_ptr) {
-  return impl_pred_exec(pathname, pred_ptr);
+pred_execdir (char *path,
+    pred *pred_ptr) {
+  return impl_pred_exec(path, pred_ptr);
 }
 static bool
-impl_pred_exec (const char *pathname, predicate *pred_ptr) {
-  exec_val *execp = &pred_ptr->args.exec_vec;
-  if (!record_exec_dir (execp)) {}
+impl_pred_exec (char *path,
+    pred *pred_ptr) {
+  exec *e = &pred_ptr->vec;
+  if (!record_exec_dir (e))
+    {}
+  @ASSERT( -1 !=
+   fcntl(e->desc,F_GETFD));@
 }
 \end{lstlisting}
       };&
-      \node (c4) ["find4 c8491c11 Null-deref"] {
+      \node (c4) ["Null-deref (c8491c11)"] {
         \begin{lstlisting}
 static boolean
 parse_newerXY (parser_table* entry, char **argv, int *arg_ptr) {
-  ...
   (*arg_ptr)++;
-  ... { ...
-    quotearg_n_style(0, options.err_quoting_style, argv[*arg_ptr]);
-  ... } ...
+  @ASSERT(argv[*arg_ptr] != NULL);@
+  quotearg_n_style(0,
+    argv[*arg_ptr]);
 }
 \end{lstlisting}
       };\\
-      \node (f1) {
-        Failure condition:\\
-        \texttt{orig_timearg = timearg}\\
+      \node (s1) {11/10419 (0.11\%)};&
+      \node (s2) {13/9195 (0.14\%)};&
+      \node (s3) {16/11739 (0.14\%)};&
+      \node (s4) {12/10151 (0.12\%)};\\
+      
+      \node (f1) [font=\small]{
         Transfer function:\\
         \texttt{orig_timearg_out = arg_ptr + 1}\\
         \texttt{timearg = arg_ptr + 1}\\
         Precondition: \texttt{null}\\
       };&
-      \node (f2) {
-        Failure condition:\\
-        \texttt{*arg_ptr >= sizeof(argv)}\\
+      \node (f2) [font=\small] {
         Transfer function:\\
         \texttt{*arg_ptr = (*arg_ptr_in) +1}\\
         \texttt{sizeof(argv) = sizeof(argv_in)}\\
         Precondition: \texttt{*arg_ptr_IN >= sizeof(argv_in)-1}
       };&
-      \node (f3) {
-        Failure condition:\\
-        \texttt{fcntl(execp->wd_for_exec->desc, F_GETFD) == -1}\\
+      \node (f3) [font=\small] {
         Transfer function:\\
         \texttt{execp->wd_for_exec->desc = open(execp_IN->wd_for_exec->desc)}\\
         Precondition: null\\
       };&
-      \node (f4) {
-        Failure condition:
-        \texttt{argv[*arg_ptr] == NULL}\\
+      \node (f4) [font=\small] {
         Transfer function:
         \texttt{*arg_ptr = (*arg_ptr_IN) + 1}\\
         Precondition:
         \texttt{argv[*arg_ptr_IN+1] = NULL}\\
       };\\
     };
-    \draw [dotted] (c1.north west) -- (c4.north east);
-    \draw [dotted] (f1.north west) -- (f4.north east);
-    \foreach \x in {1,2,3,4}
-    \draw [dotted] (c\x.north east |- m.north) -- (f\x.south east |- m.south);
+    \draw [double, thick] (c1.north west) -- (c4.north east);
+    \draw [double, thick] (s1.north west) -- (s4.north east);
+    \draw [double, thick] (f1.north west) -- (f4.north east);
+    \foreach \x in {1,2,3}
+    \draw [dotted, thick] (c\x.north east |- m.north) -- (f\x.south east |- m.south);
   \end{tikzpicture}
-  \caption{Bug signature of four types}
+  \caption{Bug signature of four types. Programs and revisions in GNU
+    findutils. Code simplied to fit in space, e.g. remove parameters,
+    rename identifiers}
 \end{figure*}
 
 \end{document}
