@@ -5,11 +5,11 @@
 
 ;; cmd: youtube-dl --extract-audio --audio-format flac <url>
 
-(define (youtube-dl-single url f)
+(define (youtube-dl-single url f (form "flac"))
   (let ([cmd (string-append "youtube-dl"
                             " --extract-audio"
-                            " --audio-format flac"
-                            " --output \"" f ".flac\""
+                            " --audio-format " form
+                            " --output \"" f "." form "\""
                             " "
                             url)])
     (displayln cmd)
@@ -19,7 +19,7 @@
 
 (define (youtube-dl pairs)
   (for ([pair pairs])
-    (youtube-dl-single (car pair) (cdr pair))))
+    (youtube-dl-single (car pair) (cdr pair) "mp3")))
 
 (module+ test
   (youtube-dl
@@ -43,5 +43,7 @@
      ("https://www.youtube.com/watch?v=Bg59q4puhmg&list=RD8xg3vE8Ie_E&index=47" . "Avril Lavigne - Girlfriend")
      ("https://www.youtube.com/watch?v=5NPBIwQyPWE" . "Avril Lavigne - Complicated")
      ("https://www.youtube.com/watch?v=8xoG0Xv3vs0" . "Avril Lavigne - Innocence")))
+
+  (youtube-dl-single "https://www.youtube.com/watch?v=5NPBIwQyPWE" "aaa" "mp3")
 
   )
