@@ -170,4 +170,41 @@ int main() {
     Pre-conditions \& Control Flow Graph}
 \end{figure*}
 
+The Control flow graph is shown in Figure 1. The query starts from the
+failure location at node 12. The generated program will contain a main
+function with a single \texttt{strcpy} expression, together with input
+and output of corresponding variables. After running the programs with
+different input, Helium discovers the transfer functions for the
+variables from input to output, and use that to compute the
+pre-condition to be $|s| >= |buf|$. However, both s and buf are not
+entry point of program, thus the query propagates backwards.
+
+There's a branch from node 12 back to node 10 or node 11, the query
+will propagate along both path. In the path to node 10, Helium
+discover an updated transfer function of $|buf'|=1024$, thus derives a
+new transfer pre-condition $|s|>=1024$. Along the other path, Helium
+finds a same change of transfer function and precondition. Since $|s|$
+is still not entry point, query continue to propagate.  Both query
+will reach a \textit{merge point}, the node 9. Since the transfer
+function for both queries are exactly the same, they are merged
+together.
+
+Along the branch for node 6 and 7, the query split into 2 for each
+path. In node 7, Helium detects the update of transfer function to be
+$|s'|=|a|$, thus update the query. Again, $|a|$ is still not entry
+point. A similar situation happens on node 6. When merging these two
+queries at node 5, the query through node 7 will not change, but the
+one through node 6 will simply eliminate the error, because there's a
+correct bounds checking of string $b$. Thus the two queries do not
+merge (the second one simply stops because it is guranteed to be
+correct). When the query continue propagates, the transfer function
+will update at node 4 to be $|s'|=|a|+|b|$, and finally at node 2 to
+be $|s'|=|argv_1|+|argv_2|$. At this point, Helium derives a
+pre-condition to be $|argv_1|+|argv_2|>=1024$. Notice that the
+pre-condition is dependent only on program entry point ($argv$),
+i.e. as long as the given input satisfy this pre-condition, the bug
+shall be triggered. Thus the query stops and reports the bug signature
+to be the final program containing all the statements updating the
+query.
+
 \end{document}
