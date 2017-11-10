@@ -1,0 +1,80 @@
+\input{prelude}
+
+\usepackage{enumitem}
+
+\begin{document}
+\title{Test}
+
+
+\begin{figure*}
+  \centering
+  \begin{tikzpicture}
+    % \matrix (tech) [
+    %   draw,
+    %   % inner ysep=0,
+    %   every node/.style={text width=6cm,
+    %     align=center,
+    %     inner xsep=0.6667em,
+    %     draw
+    %   },
+    %   ]{
+    %   \node {Syntactic Patching};&
+    %   \node {Dynamic Demand-Driven Analysis};\\
+    % };
+    \matrix (app) [
+      draw,
+      every node/.style={
+        text width=4cm,
+        draw
+      },
+      % below=0 of tech.south west,
+      % matrix anchor=north west
+      anchor=north west,
+      ] {
+      \node (n1) {};&
+      \node (n2) {};&
+      \node (n3) {};&
+      \node (n4) {};\\
+      \node {Detect and Confirm Code Clones};&
+      \node {Compute Syntactic Constraints};&
+      \node {Generate Bug Signatures};&
+      \node {Interactive IDE Tools};\\
+      \node {
+        \begin{enumerate}[leftmargin=*,label=\Alph*]
+        \item Classification of clones (surely not clones, high confident clones)
+        \item Type IV clones
+        \item Applications of clones
+        \end{enumerate}
+      };&
+      \node {
+        \begin{enumerate}[leftmargin=*,label=\Alph*]
+        \item Improved test success rate for transformed code
+        \item Save computation
+        \end{enumerate}
+      };&
+      \node {
+        \begin{enumerate}[leftmargin=*,label=\Alph*]
+        \item Fast debugging, automatic repair
+        \item Construct Bug Benchmarks
+        \end{enumerate}
+      };&
+      \node {
+        Quick feedback for developers
+        \begin{enumerate}[leftmargin=*,label=\Alph*]
+        \item Understand legacy code
+        \item Understand search results
+        \item Estimate the performance
+        \item Help select data structures
+        \item Verify refactoring
+        \item Understand the APIs
+        \end{enumerate}
+      };\\
+    };
+
+    \node [fit=(n1) (n2)] {Syntactic Patching};
+    \node [fit=(n3) (n4)] {Dynamic Demand-Driven Analysis};
+
+  \end{tikzpicture}
+\end{figure*}
+
+\end{document}
