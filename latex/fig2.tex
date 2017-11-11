@@ -49,10 +49,10 @@ int main() {
   if (bits & 1) {
 \end{lstlisting}
       };\\
-      \node {
+      \node [minimum height=1em] {
         $\qquad\cdots$
       };&
-      \node {
+      \node [minimum height=1em] {
         $\qquad\cdots$
       };\\
       \node {
@@ -115,8 +115,10 @@ int main() {
       %   Clone 2
       % };\\
     };
-    \draw [dotted] ([xshift=5pt] clone.north east)
-    -- ([xshift=5pt] clone.south east);
+
+    
+    \draw [dotted] ([xshift=10pt] clone.north east)
+    -- ([xshift=10pt] clone.south east);
 
     \matrix (code) [anchor=west,
       right=20pt of clone.north east,
@@ -131,46 +133,63 @@ int main() {
       "Source Code and Revision" below
       ] {
       \node {
-\begin{lstlisting}[style=base, numbers=left]
+\begin{lstlisting}[style=base,
+% numbers=left
+]
 int l = 0; wchar_t *c;
 cstack_t *st = init();
 \end{lstlisting}
       };\\
       \node {
-\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, numbers=left, firstnumber=3]
+\begin{lstlisting}[style=base, frame=single, framerule=0pt,
+ backgroundcolor=\color{gray!10},
+ % numbers=left, firstnumber=3
+ ]
 1+ if((st->top)(st, *c)) {
 1+   if(*c == L'\\') l++;
 \end{lstlisting}
       };\\
       \node {
-\begin{lstlisting}[style=base, frame=single, framerule=0pt, numbers=left, firstnumber=5]
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, 
+% numbers=left, firstnumber=5
+]
 2+    (st->pop)(st);
 \end{lstlisting}
       };\\
       \node {
-\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, numbers=left, firstnumber=6]
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!10}, 
+% numbers=left, firstnumber=6
+]
 1+ }
 \end{lstlisting}
       };\\
       \node {
-\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}, numbers=left, firstnumber=7]
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}, 
+% numbers=left, firstnumber=7
+]
 3+ else
 \end{lstlisting}
       };\\
       \node {
-\begin{lstlisting}[style=base, frame=single, framerule=0pt, numbers=left, firstnumber=8]
+\begin{lstlisting}[style=base, frame=single, framerule=0pt,
+% numbers=left, firstnumber=8
+]
 4+ if(~1strcpy(buf, st->buf)~1)
 \end{lstlisting}
       };\\
       \node {
-\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}, numbers=left, firstnumber=9]
+\begin{lstlisting}[style=base, frame=single, framerule=0pt, backgroundcolor=\color{gray!30}, 
+% numbers=left, firstnumber=9
+]
 3+ {
 3+  (st->pop)(st);
 3+ }
 \end{lstlisting}
       };\\
       \node {
-\begin{lstlisting}[style=base, frame=single, framerule=0pt, numbers=left, firstnumber=12]
+\begin{lstlisting}[style=base, frame=single, framerule=0pt,
+% numbers=left, firstnumber=12
+]
 5+ else {
 5+  (st->push)(st, *c);
 5+ }
@@ -216,6 +235,18 @@ cstack_t *st = init();
         \bottomrule
       \end{tabular}
     };
+
+
+    % add title for subfigure
+    \node (suba) [below=0 of clone.south, anchor=north] {
+      Figure A: Code Clone Detection
+    };
+    \node [right=5cm of suba] {
+      Figure B: Delta Debugging
+    };
+
+
+    
   \end{tikzpicture}
   % \begin{minipage}{.70\linewidth}
     % \end{minipage}

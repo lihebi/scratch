@@ -15,6 +15,10 @@
         dashed,
         minimum height=3cm,
         font=\small,
+      },
+      row2/.style={fill=green!40!black,
+        text=white, font=\Large\bf,
+        minimum height=15mm,
       }
       % scale=0.8, transform shape
       ]
@@ -39,10 +43,10 @@
       \node (n2) {};&
       \node (n3) {};&
       \node (n4) {};\\
-      \node [fill=green!40!black, text=white, font=\Large] {Detect and Confirm Code Clones};&
-      \node [fill=green!40!black, text=white, font=\Large] {Compute Syntactic Constraints};&
-      \node [fill=green!40!black, text=white, font=\Large] {Generate Bug Signatures};&
-      \node [fill=green!40!black, text=white, font=\Large] {Interactive IDE Tools};\\
+      \node [row2] {Detect \& Confirm\\ Code Clones};&
+      \node [row2] {Compute Syntactic\\ Constraints};&
+      \node [row2] {Generate \\Bug Signatures};&
+      \node [row2] {Interactive IDE Tools};\\
       \node
       [
         % fill=red!50!black,
@@ -93,7 +97,7 @@
       rounded corners=3mm,
       ] {};
     \node [
-      text=white, font=\huge\bf,
+      text=white, font=\Large\bf,
       ] at (syn.center) {Syntactic Patching};
     \node (dyn) [
       draw,
@@ -102,7 +106,7 @@
       fill=blue,
       rounded corners=3mm,
       ] {};
-    \node [text=white, font=\huge\bf,] at (dyn.center) {Dynamic Demand-Driven Analysis};
+    \node [text=white, font=\Large\bf,] at (dyn.center) {Dynamic Demand-Driven Analysis};
 
   \end{tikzpicture}
   \caption{Goal of the Framework}
