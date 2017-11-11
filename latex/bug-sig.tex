@@ -15,35 +15,28 @@
       matrix anchor=north,
       every node/.style={
         % draw,
-        anchor=north west, text width=7cm}] {
+        anchor=north west, text width=8cm}] {
       \node (c1) ["Functional Bug (66c536bb) 11/10419 (0.11\%)"]{
-        \begin{lstlisting}
-static boolean 
-parse_time (char *argv[], int *arg_ptr) {
+\begin{lstlisting}
+int main(int argc, char *argv[]) {
+  parse_time(argv, &argc);}
+bool parse_time (char *argv[], int *arg_ptr) {
   enum comparison comp;
   const char *timearg;
   if (get_comp_type(&timearg, &comp)) {}
   @ASSERT(timearg == timearg_orig);@
-  if (!get_rel_timestamp
-         (timearg, &tval))
-    return false;
-}
+  if (!get_rel_timestamp (timearg, &tval))
+    return false;}
 \end{lstlisting}
       };&
-      \node (c2) ["Buffer overflow (07b941b1) 13/9195 (0.14\%)"] {
+      \node (c2) ["Null-deref (c8491c11) 12/10151 (0.12\%)"] {
         \begin{lstlisting}
-static boolean
-parse_regex (char **argv, int *arg_ptr) {
-  return insert_regex (argv, arg_ptr, entry);
-}
-static boolean
-insert_regex (char **argv, int *arg_ptr) {
-  struct re_pattern *re;
+int main(int argc, char *argv[]) {
+  parse_newerXY(argv, &argc);}
+bool parse_newerXY (char **argv, int *arg_ptr) {
   (*arg_ptr)++;
-  @ASSERT(*arg_ptr < sizeof(argv));@
-  est_pat_mat_rate
-    (argv[*arg_ptr], 1);
-}
+  @ASSERT(argv[*arg_ptr] != NULL);@
+  quotearg_n_style(0, argv[*arg_ptr]);}
 \end{lstlisting}
       };\\
       \node (f1) [font=\small]{
@@ -54,37 +47,36 @@ insert_regex (char **argv, int *arg_ptr) {
       };&
       \node (f2) [font=\small] {
         Transfer function:\\
-        \texttt{*arg_ptr = (*arg_ptr_in) +1}\\
-        \texttt{sizeof(argv) = sizeof(argv_in)}\\
-        Precondition: \texttt{*arg_ptr_IN >= sizeof(argv_in)-1}
+        \texttt{*arg_ptr = (*arg_ptr_IN) + 1}\\
+        Precondition:
+        \texttt{argv[*arg_ptr_IN+1] = NULL}\\
       };\\
       \node (c3) ["Resource Leak (183115d0) 16/11739 (0.14\%)"] {
         \begin{lstlisting}
-bool
-pred_execdir (char *path,
-    pred *pred_ptr) {
-  return impl_pred_exec(path, pred_ptr);
-}
-static bool
-impl_pred_exec (char *path,
-    pred *pred_ptr) {
+int main(int argc, char *argv[]) {
+  char *pred_path;
+  parse_path(argv, argc, pred_path);
+  pred_execdir(pred_path, pred_ptr);}
+bool pred_execdir (char *path, pred *pred_ptr) {
+  return impl_pred_exec(path, pred_ptr);}
+bool impl_pred_exec (char *path, pred *pred_ptr) {
   exec *e = &pred_ptr->vec;
-  if (!record_exec_dir (e))
-    {}
-  @ASSERT( -1 !=
-   fcntl(e->desc,F_GETFD));@
-}
+  if (!record_exec_dir (e)) {}
+  @ASSERT( -1 != fcntl(e->desc,F_GETFD));@
 \end{lstlisting}
       };&
-      \node (c4) ["Null-deref (c8491c11) 12/10151 (0.12\%)"] {
+      \node (c4) ["Buffer overflow (07b941b1) 13/9195 (0.14\%)"] {
         \begin{lstlisting}
-static boolean
-parse_newerXY (parser_table* entry, char **argv, int *arg_ptr) {
+int main(int argc, char *argv[]) {
+  parse_regex(argv, &argc);}
+bool parse_regex (char **argv, int *arg_ptr) {
+  return insert_regex (argv, arg_ptr, entry);}
+bool insert_regex (char **argv,
+  int *arg_ptr) {
+  struct re_pattern *re;
   (*arg_ptr)++;
-  @ASSERT(argv[*arg_ptr] != NULL);@
-  quotearg_n_style(0,
-    argv[*arg_ptr]);
-}
+  @ASSERT(*arg_ptr < sizeof(argv));@
+  est_pat_mat_rate (argv[*arg_ptr], 1);}
 \end{lstlisting}
       };\\
       
@@ -95,9 +87,9 @@ parse_newerXY (parser_table* entry, char **argv, int *arg_ptr) {
       };&
       \node (f4) [font=\small] {
         Transfer function:\\
-        \texttt{*arg_ptr = (*arg_ptr_IN) + 1}\\
-        Precondition:
-        \texttt{argv[*arg_ptr_IN+1] = NULL}\\
+        \texttt{*arg_ptr = (*arg_ptr_in) +1}\\
+        \texttt{sizeof(argv) = sizeof(argv_in)}\\
+        Precondition: \texttt{*arg_ptr_IN >= sizeof(argv_in)-1}
       };\\
     };
     \draw [] (c1.north west) -- (c2.north east);
