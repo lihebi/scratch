@@ -15,8 +15,8 @@
       matrix anchor=north,
       every node/.style={
         % draw,
-        anchor=north west, text width=4cm}] {
-      \node (c1) ["Functional Bug (66c536bb)"]{
+        anchor=north west, text width=7cm}] {
+      \node (c1) ["Functional Bug (66c536bb) 11/10419 (0.11\%)"]{
         \begin{lstlisting}
 static boolean 
 parse_time (char *argv[], int *arg_ptr) {
@@ -30,7 +30,7 @@ parse_time (char *argv[], int *arg_ptr) {
 }
 \end{lstlisting}
       };&
-      \node (c2) ["Buffer overflow (07b941b1)"] {
+      \node (c2) ["Buffer overflow (07b941b1) 13/9195 (0.14\%)"] {
         \begin{lstlisting}
 static boolean
 parse_regex (char **argv, int *arg_ptr) {
@@ -45,8 +45,20 @@ insert_regex (char **argv, int *arg_ptr) {
     (argv[*arg_ptr], 1);
 }
 \end{lstlisting}
+      };\\
+      \node (f1) [font=\small]{
+        Transfer function:\\
+        \texttt{orig_timearg_out = arg_ptr + 1}\\
+        \texttt{timearg = arg_ptr + 1}\\
+        Precondition: \texttt{null}\\
       };&
-      \node (c3) ["Resource Leak (183115d0)"] {
+      \node (f2) [font=\small] {
+        Transfer function:\\
+        \texttt{*arg_ptr = (*arg_ptr_in) +1}\\
+        \texttt{sizeof(argv) = sizeof(argv_in)}\\
+        Precondition: \texttt{*arg_ptr_IN >= sizeof(argv_in)-1}
+      };\\
+      \node (c3) ["Resource Leak (183115d0) 16/11739 (0.14\%)"] {
         \begin{lstlisting}
 bool
 pred_execdir (char *path,
@@ -64,7 +76,7 @@ impl_pred_exec (char *path,
 }
 \end{lstlisting}
       };&
-      \node (c4) ["Null-deref (c8491c11)"] {
+      \node (c4) ["Null-deref (c8491c11) 12/10151 (0.12\%)"] {
         \begin{lstlisting}
 static boolean
 parse_newerXY (parser_table* entry, char **argv, int *arg_ptr) {
@@ -75,40 +87,28 @@ parse_newerXY (parser_table* entry, char **argv, int *arg_ptr) {
 }
 \end{lstlisting}
       };\\
-      \node (s1) {11/10419 (0.11\%)};&
-      \node (s2) {13/9195 (0.14\%)};&
-      \node (s3) {16/11739 (0.14\%)};&
-      \node (s4) {12/10151 (0.12\%)};\\
       
-      \node (f1) [font=\small]{
-        Transfer function:\\
-        \texttt{orig_timearg_out = arg_ptr + 1}\\
-        \texttt{timearg = arg_ptr + 1}\\
-        Precondition: \texttt{null}\\
-      };&
-      \node (f2) [font=\small] {
-        Transfer function:\\
-        \texttt{*arg_ptr = (*arg_ptr_in) +1}\\
-        \texttt{sizeof(argv) = sizeof(argv_in)}\\
-        Precondition: \texttt{*arg_ptr_IN >= sizeof(argv_in)-1}
-      };&
       \node (f3) [font=\small] {
         Transfer function:\\
-        \texttt{execp->wd_for_exec->desc = open(execp_IN->wd_for_exec->desc)}\\
+        \texttt{e->desc = open(e_IN->desc)}\\
         Precondition: null\\
       };&
       \node (f4) [font=\small] {
-        Transfer function:
+        Transfer function:\\
         \texttt{*arg_ptr = (*arg_ptr_IN) + 1}\\
         Precondition:
         \texttt{argv[*arg_ptr_IN+1] = NULL}\\
       };\\
     };
-    \draw [double, thick] (c1.north west) -- (c4.north east);
-    \draw [double, thick] (s1.north west) -- (s4.north east);
-    \draw [double, thick] (f1.north west) -- (f4.north east);
-    \foreach \x in {1,2,3}
-    \draw [dotted, thick] (c\x.north east |- m.north) -- (f\x.south east |- m.south);
+    \draw [] (c1.north west) -- (c2.north east);
+    \draw [] (c3.north west) -- (c4.north east);
+    % \draw [double, thick] (s1.north west) -- (s4.north east);
+    \draw [double, thick] (f1.south west) -- (f2.south east);
+    \draw [] (f1.north west) -- (f2.north east);
+    \draw [] (f3.north west) -- (f4.north east);
+    % \foreach \x in {1,2,3}
+    % \draw [dotted, thick] (c\x.north east |- m.north) -- (f\x.south east |- m.south);
+    \draw [double] (c1.east |- m.north) -- (f3.east |- m.south);
   \end{tikzpicture}
   \caption{Bug signature of four types. Programs and revisions in GNU
     findutils. Code simplied to fit in space, e.g. remove parameters,
