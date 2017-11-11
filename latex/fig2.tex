@@ -25,23 +25,6 @@
         outer sep=0
       },
       ] {
-%       \node [draw] {
-% \begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
-%   } else if (bits & 1<<1) {
-%     out = bits;
-%     while (out & 1<<3) {
-%       out >>= 1;
-% \end{lstlisting}
-%       };&
-%       \node [draw] {
-% \begin{lstlisting}[style=base, numbers=left, firstnumber=5, frame=single, framerule=0pt]
-%   } else if (bits & 1<<1) {
-%     out = bits;
-%     while (out & 1<<2
-%      || out & 1<<3) {
-%       out >>= 1;
-% \end{lstlisting}
-%       };\\
       \node {
 \begin{lstlisting}[label=lst-iclones-5, style=base, numbers=left]
 int main() {
@@ -116,17 +99,27 @@ int main() {
 \end{lstlisting}
       };\\[10pt]
       \node [align=left] {
+        \textbf{Clone 1}:\\
         input:\hspace{1.6mm} $bits=2$\\
         output: $out_1=2, out_2=2$\\
       };&
       \node [align=left] {
+        \textbf{Clone 2}:\\
         input:\hspace{1.6mm} $bits = 6$\\
         output: $out_1=6, out_2=3$\\
-      }; \\
+      }; \\[5mm]
+      % \node [align=center] {
+      %   Clone 1
+      % };&
+      % \node [align=center] {
+      %   Clone 2
+      % };\\
     };
+    \draw [dotted] ([xshift=5pt] clone.north east)
+    -- ([xshift=5pt] clone.south east);
 
     \matrix (code) [anchor=west,
-      right=15pt of clone.north east,
+      right=20pt of clone.north east,
       matrix anchor=north west,
       % draw,
       every node/.style={
