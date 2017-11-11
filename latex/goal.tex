@@ -8,7 +8,10 @@
 
 \begin{figure*}
   \centering
-  \begin{tikzpicture}
+  \begin{tikzpicture} [
+      every node/.append style={
+      }
+      ]
     % \matrix (tech) [
     %   draw,
     %   % inner ysep=0,
@@ -22,16 +25,22 @@
     %   \node {Dynamic Demand-Driven Analysis};\\
     % };
     \matrix (app) [
-      draw,
-      every node/.style={
+      % draw,
+      every node/.append style={
+        rounded corners=3mm,
+        minimum height=10mm,
+        align=center,
         text width=4cm,
-        draw
+        draw,
+        thick,
       },
       % below=0 of tech.south west,
       % matrix anchor=north west
       anchor=north west,
+      column sep=3mm,
+      row sep=3mm,
       ] {
-      \node (n1) {};&
+      \node (n1) {What....};&
       \node (n2) {};&
       \node (n3) {};&
       \node (n4) {};\\
@@ -71,8 +80,24 @@
       };\\
     };
 
-    \node [fit=(n1) (n2)] {Syntactic Patching};
-    \node [fit=(n3) (n4)] {Dynamic Demand-Driven Analysis};
+    \node (syn) [
+      draw,
+      fit=(n1) (n2),
+      inner sep=0,
+      fill=blue,
+      rounded corners=3mm,
+      ] {};
+    \node [
+      text=white, font=\huge\bf,
+      ] at (syn.center) {Syntactic Patching};
+    \node (dyn) [
+      draw,
+      fit=(n3) (n4),
+      inner sep=0,
+      fill=blue,
+      rounded corners=3mm,
+      ] {};
+    \node [text=white, font=\huge\bf,] at (dyn.center) {Dynamic Demand-Driven Analysis};
 
   \end{tikzpicture}
 \end{figure*}
