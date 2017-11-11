@@ -10,27 +10,22 @@
   \centering
   \begin{tikzpicture} [
       every node/.append style={
+      },
+      row3/.style={
+        dashed,
+        minimum height=3cm,
+        font=\small,
       }
+      % scale=0.8, transform shape
       ]
-    % \matrix (tech) [
-    %   draw,
-    %   % inner ysep=0,
-    %   every node/.style={text width=6cm,
-    %     align=center,
-    %     inner xsep=0.6667em,
-    %     draw
-    %   },
-    %   ]{
-    %   \node {Syntactic Patching};&
-    %   \node {Dynamic Demand-Driven Analysis};\\
-    % };
     \matrix (app) [
-      % draw,
+      draw, rounded corners, dotted,
+      inner sep=0.6em,
       every node/.append style={
         rounded corners=3mm,
         minimum height=10mm,
         align=center,
-        text width=4cm,
+        text width=3.7cm,
         draw,
         thick,
       },
@@ -40,43 +35,53 @@
       column sep=3mm,
       row sep=3mm,
       ] {
-      \node (n1) {What....};&
+      \node (n1) {};&
       \node (n2) {};&
       \node (n3) {};&
       \node (n4) {};\\
-      \node {Detect and Confirm Code Clones};&
-      \node {Compute Syntactic Constraints};&
-      \node {Generate Bug Signatures};&
-      \node {Interactive IDE Tools};\\
-      \node {
-        \begin{enumerate}[leftmargin=*,label=\Alph*]
+      \node [fill=green!40!black, text=white, font=\Large] {Detect and Confirm Code Clones};&
+      \node [fill=green!40!black, text=white, font=\Large] {Compute Syntactic Constraints};&
+      \node [fill=green!40!black, text=white, font=\Large] {Generate Bug Signatures};&
+      \node [fill=green!40!black, text=white, font=\Large] {Interactive IDE Tools};\\
+      \node
+      [
+        % fill=red!50!black,
+        % dashed
+        row3
+        ]
+      {
+        % \color{white}
+        \begin{itemize}[leftmargin=*]
         \item Classification of clones (surely not clones, high confident clones)
         \item Type IV clones
         \item Applications of clones
-        \end{enumerate}
+        \end{itemize}
       };&
-      \node {
-        \begin{enumerate}[leftmargin=*,label=\Alph*]
+      \node
+      % [dashed, font=\small]
+      [row3]
+      {
+        \begin{itemize}[leftmargin=*]
         \item Improved test success rate for transformed code
         \item Save computation
-        \end{enumerate}
+        \end{itemize}
       };&
-      \node {
-        \begin{enumerate}[leftmargin=*,label=\Alph*]
+      \node [row3] {
+        \begin{itemize}[leftmargin=*]
         \item Fast debugging, automatic repair
         \item Construct Bug Benchmarks
-        \end{enumerate}
+        \end{itemize}
       };&
-      \node {
+      \node [row3] {
         Quick feedback for developers
-        \begin{enumerate}[leftmargin=*,label=\Alph*]
+        \begin{itemize}[leftmargin=*]
         \item Understand legacy code
         \item Understand search results
         \item Estimate the performance
         \item Help select data structures
         \item Verify refactoring
         \item Understand the APIs
-        \end{enumerate}
+        \end{itemize}
       };\\
     };
 
@@ -100,6 +105,7 @@
     \node [text=white, font=\huge\bf,] at (dyn.center) {Dynamic Demand-Driven Analysis};
 
   \end{tikzpicture}
+  \caption{Goal of the Framework}
 \end{figure*}
 
 \end{document}
