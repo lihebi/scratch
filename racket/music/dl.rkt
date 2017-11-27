@@ -6,20 +6,32 @@
 ;; cmd: youtube-dl --extract-audio --audio-format flac <url>
 
 (define (youtube-dl-single url f (form "flac"))
-  (let ([cmd (string-append "youtube-dl"
-                            " --extract-audio"
-                            " --audio-format " form
-                            " --output \"" f "." form "\""
-                            " "
-                            url)])
+  (let ([cmd
+         (format
+          (string-append "youtube-dl"
+                         " --audio-quality 0"
+                         ;; " --keep-video"
+                         " --extract-audio"
+                         " --audio-format ~a"
+                         " --output \"~a.%(ext)s\" ~a")
+          form
+          f url)
+         #;
+         (string-append "youtube-dl"
+                        " --extract-audio"
+                        " --audio-format " form
+                        " --output \"" f ".%(ext)s" "\""
+                        " "
+                        url)])
     (displayln cmd)
     (printf "Downloading ~a~n" f)
     (system cmd)
-    (displayln "Downloaded")))
+    ;; (displayln "Downloaded")
+    ))
 
 (define (youtube-dl pairs)
   (for ([pair pairs])
-    (youtube-dl-single (car pair) (cdr pair) "mp3")))
+    (youtube-dl-single (car pair) (cdr pair))))
 
 (module+ test
   (youtube-dl
@@ -44,6 +56,6 @@
      ("https://www.youtube.com/watch?v=5NPBIwQyPWE" . "Avril Lavigne - Complicated")
      ("https://www.youtube.com/watch?v=8xoG0Xv3vs0" . "Avril Lavigne - Innocence")))
 
-  (youtube-dl-single "https://www.youtube.com/watch?v=5NPBIwQyPWE" "aaa" "mp3")
+  ;; (youtube-dl-single "https://www.youtube.com/watch?v=5NPBIwQyPWE" "aaa" "mp3")
 
   )
