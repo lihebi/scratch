@@ -6,28 +6,22 @@
 ;; cmd: youtube-dl --extract-audio --audio-format flac <url>
 
 (define (youtube-dl-single url f (form "flac"))
-  (let ([cmd
-         (format
-          (string-append "youtube-dl"
-                         " --audio-quality 0"
-                         ;; " --keep-video"
-                         " --extract-audio"
-                         " --audio-format ~a"
-                         " --output \"~a.%(ext)s\" ~a")
-          form
-          f url)
-         #;
-         (string-append "youtube-dl"
-                        " --extract-audio"
-                        " --audio-format " form
-                        " --output \"" f ".%(ext)s" "\""
-                        " "
-                        url)])
-    (displayln cmd)
-    (printf "Downloading ~a~n" f)
-    (system cmd)
-    ;; (displayln "Downloaded")
-    ))
+  (when (not (file-exists? (string-append f "." form)))
+    (let ([cmd
+           (format
+            (string-append "youtube-dl"
+                           " --audio-quality 0"
+                           ;; " --keep-video"
+                           " --extract-audio"
+                           " --audio-format ~a"
+                           " --output \"~a.%(ext)s\" ~a")
+            form
+            f url)])
+      (displayln cmd)
+      (printf "Downloading ~a~n" f)
+      (system cmd)
+      ;; (displayln "Downloaded")
+      )))
 
 (define (youtube-dl pairs)
   (for ([pair pairs])
@@ -54,8 +48,12 @@
      ("https://www.youtube.com/watch?v=nfWlot6h_JM&list=RD8xg3vE8Ie_E&index=23" . "Taylor Swift - Shake It Off")
      ("https://www.youtube.com/watch?v=Bg59q4puhmg&list=RD8xg3vE8Ie_E&index=47" . "Avril Lavigne - Girlfriend")
      ("https://www.youtube.com/watch?v=5NPBIwQyPWE" . "Avril Lavigne - Complicated")
-     ("https://www.youtube.com/watch?v=8xoG0Xv3vs0" . "Avril Lavigne - Innocence")))
+     ("https://www.youtube.com/watch?v=8xoG0Xv3vs0" . "Avril Lavigne - Innocence")
+     ("https://www.youtube.com/watch?v=P1qnhfb3PUY&list=RDGMEMQ1dJ7wXfLlqCjwV0xfSNbAVMP1qnhfb3PUY"
+      . "Taylor Swift - Blank Space")))
 
   ;; (youtube-dl-single "https://www.youtube.com/watch?v=5NPBIwQyPWE" "aaa" "mp3")
-
+  (youtube-dl
+   '(("https://www.youtube.com/watch?v=BsvIwqyiaJw&list=RDBsvIwqyiaJw" . "李毓芬 - 是我不夠好")
+     ("https://www.youtube.com/watch?v=enFGhIcD1d8" . "告白氣球 - 周二珂")))
   )
