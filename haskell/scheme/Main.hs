@@ -5,6 +5,7 @@ import System.Environment
 import Control.Monad
 -- for error handling
 import Control.Monad.Error
+-- import Control.Monad.Trans.Error
 
 import Text.ParserCombinators.Parsec hiding (spaces)
 import System.Environment
@@ -12,11 +13,9 @@ import System.Environment
 main :: IO ()
 main = do
   putStrLn "Hello"
-  -- args <- getArgs
-  -- putStrLn ("Hello, " ++ args !! 0)
-  -- (expr:_) <- getArgs
-  -- putStrLn (readExpr "$")
-
+  args <- getArgs
+  evaled <- return $ liftM show $ readExpr (args !! 0) >>= eval
+  putStrLn $ extractValue $ trapError evaled
 
 myadd :: Num a => a -> a -> a
 myadd a b = a + b
@@ -24,7 +23,7 @@ myadd a b = a + b
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
 
-readExpr :: String -> LispVal
+readExpr :: String -> ThrowsError LispVal
 readExpr input = case parse
   -- (spaces >> symbol)
   parseExpr
@@ -32,8 +31,9 @@ readExpr input = case parse
                    -- the parse function returns an Either, it
                    -- contains two data constructors, Left for error,
                    -- Right for success and gives value
-                   Left err -> String $ "No match: " ++ show err
-                   Right val -> val
+                   -- throwError is built-in
+                   Left err -> throwError $ Parser err
+                   Right val -> return val
 
 spaces :: Parser ()
 spaces = skipMany1 space
@@ -157,20 +157,25 @@ unwordsList = unwords . map showVal
 instance Show LispVal where show = showVal
 
 
-eval :: LispVal -> LispVal
-eval val@(String _) = val
-eval val@(Number _) = val
-eval val@(Bool _) = val
-eval (List [Atom "quote", val]) = val
+eval :: LispVal -> ThrowsError LispVal
+eval val@(String _) = return val
+eval val@(Number _) = return val
+eval val@(Bool _) = return val
+eval (List [Atom "quote", val]) = return val
 
-eval (List (Atom func : args)) = apply func $ map eval args
+-- mapM maps a monadic function over a list
+-- it returns Right [results] on success, Left error on failure
+eval (List (Atom func : args)) = mapM eval args >>= apply func
+eval badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
-apply :: String -> [LispVal] -> LispVal
+apply :: String -> [LispVal] -> ThrowsError LispVal
 -- lookup is a Haskell function that looks up a key inside a list of
 -- pairs. It returns a Maybe.
-apply func args = maybe (Bool False) ($ args) $ lookup func primitives
+apply func args = maybe (throwError $ NotFunction "Unrecognized primitive function args" func)
+                        ($ args)
+                        (lookup func primitives)
 
-primitives :: [(String, [LispVal] -> LispVal)]
+primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives = [("+", numericBinop (+)),
               ("-", numericBinop (-)),
               ("*", numericBinop (*)),
@@ -186,22 +191,26 @@ primitives = [("+", numericBinop (+)),
 --
 -- But why the op has (Int -> Int -> Int)? This can support arbitrary
 -- operants??
-numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> LispVal
+numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
+
+numericBinop op [] = throwError $ NumArgs 2 []
+numericBinop op singleVal@[_] = throwError $ NumArgs 2 singleVal
 -- foldl1 is said to implement arbitrary operants support
-numericBinop op params = Number $ foldl1 op $ map unpackNum params
-unpackNum :: LispVal -> Integer
-unpackNum (Number n) = n
+numericBinop op params = mapM unpackNum params >>= return . Number . foldl1 op
+
+unpackNum :: LispVal -> ThrowsError Integer
+unpackNum (Number n) = return n
 -- reads is a Haskell function that parse a string into a pair (parsed
 -- number, rest string)
 unpackNum (String n) = let parsed = reads n :: [(Integer, String)] in
   if null parsed
-     then 0
+     then throwError $ TypeMismatch "number" $ String n
      -- !! means index 0. Then why need fst??
-     else fst $ parsed !! 0
+     else return $ fst $ parsed !! 0
 -- match one-item list
 unpackNum (List [n]) = unpackNum n
 -- otherwise
-unpackNum _ = 0
+unpackNum notNum = throwError $ TypeMismatch "number" notNum
 
 
 
@@ -241,3 +250,16 @@ instance Error LispError where
 -- This is partial evaluation. The rule for type acts same as
 -- functions.
 type ThrowsError = Either LispError
+
+-- Either has two other functions apart from monadic ones
+-- 1. throwError: takes an Error value, and lifts it into Left constructor
+-- 2. catchError: takes an action and return a normal value ???
+trapError action = catchError action (return . show)
+-- the result of trapError will be an Either always with Right value,
+-- i.e. it is valid ???
+
+-- extract the value from our ThrowsError (which is an Either monad)
+-- notice that we left the Left case, because we want it to just fail
+extractValue :: ThrowsError a -> a
+extractValue (Right val) = val
+
