@@ -11,12 +11,43 @@ import Control.Monad.Error
 import Text.ParserCombinators.Parsec hiding (spaces)
 import System.Environment
 
+import System.IO
+
 main :: IO ()
 main = do
-  putStrLn "Hello"
   args <- getArgs
-  evaled <- return $ liftM show $ readExpr (args !! 0) >>= eval
-  putStrLn $ extractValue $ trapError evaled
+  case length args of
+    0 -> runRepl
+    1 -> evalAndPrint $ args !! 0
+    otherwise -> putStrLn "Program takes 0 or 1 argument"
+
+flushStr :: String -> IO ()
+flushStr str = putStr str >> hFlush stdout
+
+readPrompt :: String -> IO String
+readPrompt prompt = flushStr prompt >> getLine
+evalString :: String -> IO String
+evalString expr = return $ extractValue $ trapError (liftM show $ readExpr expr >>= eval)
+evalAndPrint :: String -> IO ()
+evalAndPrint expr = evalString expr >>= putStrLn
+
+-- naming convention: ends with an underscore: monadic functions that
+-- repeat but do not return a value
+--
+-- using Monad m => and m a because, the corresponding parameter is
+-- generalized on all monads, not just IO
+until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m()
+-- 1. pred: signal when to stop
+-- 2. prompt: m a, an action to perform before the test (to get result in this case)
+-- 3. action: a function returning an action, to deal with the input
+until_ pred prompt action = do
+  result <- prompt
+  if pred result
+     then return ()
+     else action result >> until_ pred prompt action
+
+runRepl :: IO ()
+runRepl = until_ (== "quit") (readPrompt "Lisp>>> ") evalAndPrint
 
 myadd :: Num a => a -> a -> a
 myadd a b = a + b
