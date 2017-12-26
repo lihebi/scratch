@@ -239,13 +239,13 @@ parseExpr = parseAtom
                    return x
 
 parseList :: Parser LispVal
-parseList = liftM List $ sepEndBy parseExpr spaces
+parseList = liftM List $ sepBy parseExpr spaces
 
 parseDottedList :: Parser LispVal
 parseDottedList = do
-  head1 <- endBy parseExpr spaces
-  tail1 <- char '.' >> spaces >> parseExpr
-  return $ DottedList head1 tail1
+  head <- endBy parseExpr spaces
+  tail <- char '.' >> spaces >> parseExpr
+  return $ DottedList head tail
 
 parseQuoted :: Parser LispVal
 parseQuoted = do
