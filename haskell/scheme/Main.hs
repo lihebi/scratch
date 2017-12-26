@@ -1,3 +1,4 @@
+{-# LANGUAGE ExistentialQuantification #-}
 module Main where
 -- for getArgs
 import System.Environment
@@ -163,9 +164,16 @@ eval val@(Number _) = return val
 eval val@(Bool _) = return val
 eval (List [Atom "quote", val]) = return val
 
+eval (List [Atom "if", pred, conseq, alt]) =
+  do result <- eval pred
+     case result of
+       Bool False -> eval alt
+       otherwise -> eval conseq
+
 -- mapM maps a monadic function over a list
 -- it returns Right [results] on success, Left error on failure
 eval (List (Atom func : args)) = mapM eval args >>= apply func
+
 eval badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
 apply :: String -> [LispVal] -> ThrowsError LispVal
@@ -182,7 +190,26 @@ primitives = [("+", numericBinop (+)),
               ("/", numericBinop div),
               ("mod", numericBinop mod),
               ("quotient", numericBinop quot),
-              ("remainder", numericBinop rem)]
+              ("remainder", numericBinop rem),
+              ("=", numBoolBinop (==)),
+              ("<", numBoolBinop (<)),
+              (">", numBoolBinop (>)),
+              ("/=", numBoolBinop (/=)),
+              (">=", numBoolBinop (>=)),
+              ("<=", numBoolBinop (<=)),
+              ("&&", boolBoolBinop (&&)),
+              ("||", boolBoolBinop (||)),
+              ("string=?", strBoolBinop (==)),
+              ("string<?", strBoolBinop (<)),
+              ("string>?", strBoolBinop (>)),
+              ("string<=?", strBoolBinop (<=)),
+              ("string>=?", strBoolBinop (>=)),
+              ("car", car),
+              ("cdr", cdr),
+              ("cons", cons),
+              ("eq?", eqv),
+              ("eqv?", eqv),
+              ("equal?", equal)]
 
 -- takes a primitive haskell function
 -- wrap it with code to unpack an argument list
@@ -212,7 +239,87 @@ unpackNum (List [n]) = unpackNum n
 -- otherwise
 unpackNum notNum = throwError $ TypeMismatch "number" notNum
 
+boolBinop :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> [LispVal] -> ThrowsError LispVal
+boolBinop unpacker op args = if length args /= 2
+  then throwError $ NumArgs 2 args
+  else do left <- unpacker $ args !! 0
+          right <- unpacker $ args !! 1
+          -- any function can be turned into an infix operator by
+          -- wrapping it in backticks
+          return $ Bool $ left `op` right
 
+numBoolBinop = boolBinop unpackNum
+strBoolBinop = boolBinop unpackStr
+boolBoolBinop = boolBinop unpackBool
+
+unpackStr :: LispVal -> ThrowsError String
+unpackStr (String s) = return s
+unpackStr (Number s) = return $ show s
+unpackStr (Bool s) = return $ show s
+unpackStr notString = throwError $ TypeMismatch "string" notString
+
+unpackBool :: LispVal -> ThrowsError Bool
+unpackBool (Bool b) = return b
+unpackBool notBool = throwError $ TypeMismatch "boolean" notBool
+
+
+car :: [LispVal] -> ThrowsError LispVal
+-- using [] outside because we want [LispVal], instead of one LispVal
+-- that is a list
+car [List (x : xs)] = return x
+car [DottedList (x : xs) _] = return x
+car [badArg] = throwError $ TypeMismatch "pair" badArg
+car badArgList = throwError $ NumArgs 1 badArgList
+
+cdr :: [LispVal] -> ThrowsError LispVal
+cdr [List (x : xs)] = return $ List xs
+cdr [DottedList [_] x] = return x
+cdr [DottedList (_ : xs) x] = return $ DottedList xs x
+cdr [badArg] = throwError $ TypeMismatch "pair" badArg
+cdr badArgList = throwError $ NumArgs 1 badArgList
+
+cons :: [LispVal] -> ThrowsError LispVal
+cons [x1, List []] = return $ List [x1]
+cons [x, List xs] = return $ List $ x : xs
+cons [x, DottedList xs xlast] = return $ DottedList (x : xs) xlast
+cons [x1, x2] = return $ DottedList [x1] x2
+cons badArgList = throwError $ NumArgs 2 badArgList
+
+eqv :: [LispVal] -> ThrowsError LispVal
+eqv [(Bool arg1), (Bool arg2)] = return $ Bool $ arg1 == arg2
+eqv [(Number arg1), (Number arg2)] = return $ Bool $ arg1 == arg2
+eqv [(String arg1), (String arg2)] = return $ Bool $ arg1 == arg2
+eqv [(Atom arg1), (Atom arg2)] = return $ Bool $ arg1 == arg2
+eqv [(DottedList xs x), (DottedList ys y)] = eqv [List $ xs ++ [x], List $ ys ++ [y]]
+eqv [(List arg1), (List arg2)]
+  = return $ Bool $ (length arg1 == length arg2) &&
+    -- zip seems to pair each corresponding items in the two list
+    -- all will apply the function, and succeeds if all of them succeed
+    (all eqvPair $ zip arg1 arg2)
+  -- this is a local function definition
+  where eqvPair (x1, x2) = case eqv [x1, x2] of
+          Left err -> False
+          Right (Bool val) -> val
+eqv [_,_] = return $ Bool False
+eqv badArgList = throwError $ NumArgs 2 badArgList
+
+-- need to use {-# LANGUAGE ExistentialQuantification #-}
+data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)
+unpackEquals :: LispVal -> LispVal -> Unpacker -> ThrowsError Bool
+unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
+  do unpacked1 <- unpacker arg1
+     unpacked2 <- unpacker arg2
+     return $ unpacked1 == unpacked2
+  `catchError` (const $ return False)
+
+equal :: [LispVal] -> ThrowsError LispVal
+equal [arg1, arg2] = do
+  -- map (try) all unpackers, and if any of them equal, we treat it as equal
+  primitiveEquals <- liftM or $ mapM (unpackEquals arg1 arg2)
+                     -- this is a heterogenous list
+                     [AnyUnpacker unpackNum, AnyUnpacker unpackStr, AnyUnpacker unpackBool]
+  eqvEquals <- eqv [arg1, arg2]
+  return $ Bool $ (primitiveEquals || let (Bool x) = eqvEquals in x)
 
 -- Error handling
 
