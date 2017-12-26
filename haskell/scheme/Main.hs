@@ -12,6 +12,9 @@ import Text.ParserCombinators.Parsec hiding (spaces)
 import System.Environment
 
 import System.IO
+import Data.IORef
+
+type Env = IORef [(String, IORef LispVal)]
 
 main :: IO ()
 main = do
