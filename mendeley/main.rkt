@@ -245,7 +245,7 @@ order by FileHighlightRects.page")])
 
 (define (page->html page segments)
   (~a "<html>"
-      "<head> <style> hl { color: red; } </style> </head>"
+      "<head> <style> hl { background-color: yellow; } </style> </head>"
       "<body>"
       (apply string-append
              (let ([text (page-text page)])
