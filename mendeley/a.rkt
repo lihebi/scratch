@@ -3,6 +3,7 @@
 
 (require db)
 (require pict pdf-read)
+(require rackunit)
 (require "pdf-read-extra.rkt")
 
 (define conn
@@ -84,10 +85,15 @@ LEFT JOIN FileHighlightRects
 ON FileHighlightRects.highlightId=FileHighlights.id
 where Files.hash=\"" (get-document-hash id) "\"
 order by FileHighlightRects.page")])
-    (query-rows conn query)
-    ;; group by pages
-    (group-by (λ (v) (first v))
-              (map vector->list (query-rows conn query)))))
+    (let ([convert (λ (spec)
+                     (append (take spec 1)
+                             (mendeley-rect->pdf-read-rect
+                              (pdf-page (get-document-file id) 0)
+                              (drop spec 1))))])
+      ;; group by pages
+      (group-by (λ (v) (first v))
+                (map convert
+                     (map vector->list (query-rows conn query)))))))
 
 ;; (get-highlight-spec 38)
 
@@ -111,13 +117,13 @@ order by FileHighlightRects.page")])
         (for/list ([hl (in-list page-hl)])
           (match-let*
               ([(list x1 y1 x2 y2)
-                (mendeley-rect->pdf-read-rect pdf (drop hl 1))])
+                (drop hl 1)])
             (page-text-in-rect pdf 'glyph x1 y2 x2 y1)))))))
 
 (define (mendeley-rect->pdf-read-rect pdf rect)
   (match-let ([(list x1 y1 x2 y2) rect])
     (let ([height (second (page-size pdf))])
-      (list x1 (- height y1) x2 (- height y2)))))
+      (list x1 (- height y2) x2 (- height y1)))))
 
 ;; (get-highlight-text 38)
 
@@ -132,50 +138,48 @@ order by FileHighlightRects.page")])
                    ([hl (in-list page-hl)])
            (match-let*
                ([(list x1 y1 x2 y2)
-                 (mendeley-rect->pdf-read-rect pdf (drop hl 1))])
-             (pin-over view x1 y2
+                 (drop hl 1)])
+             (pin-over view x1 y1
                        (cellophane
                         (colorize
-                         (filled-rectangle (- x2 x1) (- y1 y2))
+                         (filled-rectangle (- x2 x1) (- y2 y1))
                          "yellow")
                         0.5))))
          1.5)))))
 
 ;; (visualize-highlight 38)
 
-
-;; (page->pict "/home/hebi/Downloads/FSE_2018_paper_239.pdf")
-
-(define dirichlet-pdf (pdf-page "/home/hebi/.local/share/data/Mendeley%20Ltd./Mendeley%20Desktop/Downloaded/Blei,%20Ng,%20Jordan%20-%202012%20-%20Latent%20Dirichlet%20Allocation.pdf"
-                                0))
-
-;; Alright, now we can get the font name and size. The font name
-;; contians bold, italic. There is an attribute for is_underlined or
-;; not.
-(define (attr-test)
-  (page-attr dirichlet-pdf))
-
-;; (length (page-text-with-layout dirichlet-pdf))
-
 (define (add-empty-attr text-with-layout)
-  (map (λ (l) (append l '(())))))
-(define (in-rect? small big)
-  "Check if small is within big"
-  (match-let ([(list sx1 sy1 sx2 sy2) small]
-              [(list bx1 by1 bx2 by2) big])
-    ;; FIXME logic
-    (and (> sx1 bx1)
-         (> sy1 by1)
-         (< sx2 bx2)
-         (< sy2 by2))))
+  (map (λ (l) (append l '(()))) text-with-layout))
 
-(define (mark-hl attr-text hls)
+(define (rect-overlap? r1 r2)
+  "Check if small is within big"
+  (match-let ([(list r1x1 r1y1 r1x2 r1y2) r1]
+              [(list r2x1 r2y1 r2x2 r2y2) r2])
+    ;; FIXME logic
+    (not (or (> r1x1 r2x2)
+             (> r2x1 r1x2)
+             (> r1y1 r2y2)
+             (> r2y1 r1y2)))))
+(module+ test
+  (rect-overlap? '(1 2 3 4) '(1 3 4 5))
+  (rect-overlap? '(1 2 3 4) '(4 5 6 7))
+  (rect-overlap? '(1 2 3 4) '(1 3 4 5))
+
+  )
+
+(define (mark-hl attr-text page-hl)
   "Precondition: same page"
   (map (λ (letter)
-         (if (in-rect? (second letter) hls)
+         (if (empty?
+              (filter
+               identity
+               (map (λ (hl)
+                      (rect-overlap? (second letter) hl))
+                    page-hl)))
+             letter
              (append (drop-right letter 1)
-                     (list (append (last letter) '(hl))))
-             letter))
+                     (list (append (last letter) '(hl))))))
        attr-text))
 
 (define (filter-hl attr-text)
@@ -183,12 +187,135 @@ order by FileHighlightRects.page")])
             (member 'hl (last letter)))
           attr-text))
 
+
+;; how about getting the index of highlights?
+
+(define (page-hl->index-segments page page-hl)
+  ;; 1. get all text
+  ;; 2. mark hl
+  ;; 3. count start and stop indexes
+  (list->segments
+   (indexes-where (mark-hl
+                   (add-empty-attr
+                    (page-text-with-layout page))
+                   page-hl)
+                  (λ (letter)
+                    (member 'hl (last letter))))))
+
+(define (attr->index-segments attr font-name)
+  (map (λ (v)
+         (take-right v 2))
+       (filter (λ (v)
+             (string-contains? (first v) font-name))
+           attr)))
+
+#;
 (define (page-text-not-in-rects page rects)
   "Return the text that is not in rects. Concatenate them.")
 
 ;; (page-find-text dirichlet-pdf "deployed in modern Internet ")
 
-(define (search)
+(define (list->segments lst)
+  "from list of numbers, to segments of (start,end)"
+  (if (empty? lst) '()
+      (for/fold ([res '()]
+                 [start (first lst)]
+                 [stop (first lst)]
+                 #:result (append res (list (list start stop))))
+                ([v (in-list (rest lst))])
+        (if (= (+ stop 1) v)
+            (values res start v)
+            (values
+             (append res (list (list start stop)))
+             v v)))))
+
+(module+ test
+  (list->segments '())
+  (check-equal? (list->segments '(1)) '((1 1)))
+  (check-equal? (list->segments '(1 2 3 6 7 9 10 11 18 19 20 21))
+                '((1 3) (6 7) (9 11) (18 21)))
+  )
+
+(define (segment-prefix i segments)
+  (apply string-append
+         (for/list ([segment segments])
+           (let ([segs (first segment)]
+                 [tag (second segment)])
+             (if (member i (map first segs))
+                 (~a "<" tag ">")
+                 "")))))
+
+(define (segment-suffix i segments)
+  (apply string-append
+         (for/list ([segment segments])
+           (let ([segs (first segment)]
+                 [tag (second segment)])
+             (if (member i (map second segs))
+                 (~a "</" tag ">")
+                 "")))))
+
+(define (page->html page segments)
+  (~a "<html>"
+      "<head> <style> hl { color: red; } </style> </head>"
+      "<body>"
+      (apply string-append
+             (let ([text (page-text page)])
+               (for/list ([i (in-naturals)]
+                          [letter (in-string text)])
+                 (~a (segment-prefix i segments)
+                     (string-replace (string letter) "\n" "</br>")
+                     (segment-suffix i segments)))))
+      "</body>" "</html>"))
+
+(define (mendeley-document->html id)
+  (let* ([f (get-document-file id)]
+         [pagenum (pdf-count-pages f)]
+         [hls (apply append (get-highlight-spec id))])
+    (apply
+     string-append
+     (for/list ([i (in-range pagenum)])
+       (let ([page (pdf-page f i)]
+             [page-hl (filter
+                       (λ (page-hl)
+                         (= (first page-hl) (add1 i)))
+                       hls)])
+         (page-hl->index-segments
+          page
+          (map (λ (l) (drop l 1)) page-hl))
+         (let ([hl-segments (page-hl->index-segments
+                             page
+                             (map (λ (l) (drop l 1)) page-hl))]
+               [bold-segments (attr->index-segments
+                               (page-attr page) "Bold")]
+               [italic-segments (attr->index-segments
+                                 (page-attr page) "Italic")])
+           (page->html page
+                       (list (list hl-segments "hl")
+                             (list bold-segments "b")
+                             (list italic-segments "i")))))))))
+
+
+(module+ test
+  (define dirichlet-pdf (pdf-page "/home/hebi/.local/share/data/Mendeley%20Ltd./Mendeley%20Desktop/Downloaded/Blei,%20Ng,%20Jordan%20-%202012%20-%20Latent%20Dirichlet%20Allocation.pdf" 0))
+  (define first-page-spec (first (get-highlight-spec 38)))
+
+  (display-to-file
+   (mendeley-document->html 38)
+   "test.html"
+   #:exists 'replace)
+
+
+  ;; get all text with spec by letters on page 0
+  ;; mark highlight
+  ;; mark font
+  ;; output xml (special to bold, italic, hl)
+  (filter-hl
+   (mark-hl
+    (add-empty-attr
+     (page-text-with-layout dirichlet-pdf))
+    (map (λ (l) (drop l 1)) first-page-spec)))
+
+
   (scale (let ([page dirichlet-pdf])
            (for/fold ([pageview (page->pict page)])
                      ([bounding-box
@@ -203,4 +330,6 @@ order by FileHighlightRects.page")])
              (pin-over pageview x1 y1
                        (cellophane
                         (colorize (filled-rectangle (- x2 x1) (- y2 y1)) "yellow")
-                        0.5)))) 1.5))
+                        0.5)))) 1.5)
+  
+  )
