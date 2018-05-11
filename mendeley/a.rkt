@@ -263,7 +263,8 @@ order by FileHighlightRects.page")])
                (for/list ([i (in-naturals)]
                           [letter (in-string text)])
                  (~a (segment-prefix i segments)
-                     (string-replace (string letter) "\n" "</br>")
+                     (string-replace (string letter)
+                                     "\n" "</br>\n")
                      (segment-suffix i segments)))))
       "</body>" "</html>"))
 
