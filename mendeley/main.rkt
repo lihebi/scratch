@@ -4,43 +4,31 @@
 (require db)
 (require pict pdf-read)
 (require rackunit)
+(require racket/cmdline)
 (require "pdf-read-extra.rkt")
 
-(define conn
-  (sqlite3-connect #:database "/home/hebi/.local/share/data/Mendeley Ltd./Mendeley Desktop/lihebi.com@gmail.com@www.mendeley.com.sqlite"
-                   #:mode 'read-only))
+(provide get-group-names
+         get-group-document-ids
+         get-document-file
+         get-highlight-spec
+         mendeley-document->html
+         get-highlight-text
+         get-document-text)
 
-;; (query-rows conn "select * from Groups")
-;; (query-rows conn "select * from FileHighlights")
 
-
-(define query
-  "SELECT Files.localUrl, FileHighlightRects.page,
-                    FileHighlightRects.x1, FileHighlightRects.y1,
-                    FileHighlightRects.x2, FileHighlightRects.y2,
-                    FileHighlights.documentId,
-Groups.name
-
-            FROM Files
-            LEFT JOIN FileHighlights
-                ON FileHighlights.fileHash=Files.hash
-            LEFT JOIN FileHighlightRects
-                ON FileHighlightRects.highlightId=FileHighlights.id
-LEFT JOIN RemoteDocuments
-ON RemoteDocuments.documentId=FileHighlights.documentId
-LEFT JOIN Groups
-ON Groups.id=RemoteDocuments.groupId
-            WHERE (FileHighlightRects.page IS NOT NULL)
-"
-)
-
-(define (get-group-document-ids group-name)
+(define (get-group-document-ids conn group-name)
   (let ([query (~a "SELECT documentId
             FROM RemoteDocuments
 JOIN Groups
 ON Groups.id=RemoteDocuments.groupId
 WHERE Groups.name=\"" group-name "\"")])
     (map first (map vector->list (query-rows conn query)))))
+
+(define (get-group-names conn)
+  (let ([query (~a "SELECT name FROM Groups")])
+    (filter non-empty-string?
+            (apply append
+                   (map vector->list (query-rows conn query))))))
 
 ;; (get-group-document-ids "nsf")
 
@@ -50,7 +38,7 @@ WHERE Groups.name=\"" group-name "\"")])
         (get-group-document-ids "nsf"))
 
 
-(define (get-document-file id)
+(define (get-document-file conn id)
   "Return file name or empty string"
   (let ([query (~a "SELECT Files.localUrl from Files LEFT JOIN
 DocumentFiles ON DocumentFiles.hash=Files.hash where
@@ -61,7 +49,7 @@ DocumentFiles.documentId=" id)])
            (vector-ref (first query-result) 0)
            (string-length "file://"))))))
 
-(define (get-document-hash id)
+(define (get-document-hash conn id)
   (let ([query (~a "SELECT Files.hash from Files LEFT JOIN
 DocumentFiles ON DocumentFiles.hash=Files.hash where
 DocumentFiles.documentId=" id)])
@@ -71,7 +59,12 @@ DocumentFiles.documentId=" id)])
 
 ;; (get-document-hash-from-id 38)
 
-(define (get-highlight-spec id)
+(define (mendeley-rect->pdf-read-rect pdf rect)
+  (match-let ([(list x1 y1 x2 y2) rect])
+    (let ([height (second (page-size pdf))])
+      (list x1 (- height y2) x2 (- height y1)))))
+
+(define (get-highlight-spec conn id)
   ;; note that there might be multiple id corresponding to the same
   ;; file. The highlights, however, relate to one id. So, using
   ;; document id to get highlights will not get all the highlights
@@ -83,12 +76,12 @@ LEFT JOIN FileHighlights
 ON FileHighlights.fileHash=Files.hash
 LEFT JOIN FileHighlightRects
 ON FileHighlightRects.highlightId=FileHighlights.id
-where Files.hash=\"" (get-document-hash id) "\"
+where Files.hash=\"" (get-document-hash conn id) "\"
 order by FileHighlightRects.page")])
     (let ([convert (λ (spec)
                      (append (take spec 1)
                              (mendeley-rect->pdf-read-rect
-                              (pdf-page (get-document-file id) 0)
+                              (pdf-page (get-document-file conn id) 0)
                               (drop spec 1))))])
       ;; group by pages
       (group-by (λ (v) (first v))
@@ -107,9 +100,9 @@ order by FileHighlightRects.page")])
 ;; Also, I want to get the font name and size.
 
 
-(define (get-highlight-text id)
-  (let ([file-hl (get-highlight-spec id)]
-        [f (get-document-file id)])
+(define (get-highlight-text conn id)
+  (let ([file-hl (get-highlight-spec conn id)]
+        [f (get-document-file conn id)])
     (for/list ([page-hl (in-list file-hl)])
       (let* ([p (sub1 (first (first page-hl)))]
              [pdf (pdf-page f p)]
@@ -118,18 +111,14 @@ order by FileHighlightRects.page")])
           (match-let*
               ([(list x1 y1 x2 y2)
                 (drop hl 1)])
-            (page-text-in-rect pdf 'glyph x1 y2 x2 y1)))))))
+            (page-text-in-rect pdf 'glyph x1 y1 x2 y2)))))))
 
-(define (mendeley-rect->pdf-read-rect pdf rect)
-  (match-let ([(list x1 y1 x2 y2) rect])
-    (let ([height (second (page-size pdf))])
-      (list x1 (- height y2) x2 (- height y1)))))
 
-;; (get-highlight-text 38)
+;; (get-highlight-text conn 38)
 
-(define (visualize-highlight id)
-  (let ([file-hl (get-highlight-spec id)]
-        [f (get-document-file id)])
+(define (visualize-highlight conn id)
+  (let ([file-hl (get-highlight-spec conn id)]
+        [f (get-document-file conn id)])
     (for/list ([page-hl (in-list file-hl)])
       (let* ([p (sub1 (first (first page-hl)))]
              [pdf (pdf-page f p)])
@@ -147,7 +136,7 @@ order by FileHighlightRects.page")])
                         0.5))))
          1.5)))))
 
-;; (visualize-highlight 38)
+;; (visualize-highlight conn 38)
 
 (define (add-empty-attr text-with-layout)
   (map (λ (l) (append l '(()))) text-with-layout))
@@ -268,40 +257,59 @@ order by FileHighlightRects.page")])
                      (segment-suffix i segments)))))
       "</body>" "</html>"))
 
-(define (mendeley-document->html id)
-  (let* ([f (get-document-file id)]
-         [pagenum (pdf-count-pages f)]
-         [hls (apply append (get-highlight-spec id))])
-    (apply
-     string-append
-     (for/list ([i (in-range pagenum)])
-       (let ([page (pdf-page f i)]
-             [page-hl (filter
-                       (λ (page-hl)
-                         (= (first page-hl) (add1 i)))
-                       hls)])
-         (page-hl->index-segments
-          page
-          (map (λ (l) (drop l 1)) page-hl))
-         (let ([hl-segments (page-hl->index-segments
-                             page
-                             (map (λ (l) (drop l 1)) page-hl))]
-               [bold-segments (attr->index-segments
-                               (page-attr page) "Bold")]
-               [italic-segments (attr->index-segments
-                                 (page-attr page) "Italic")])
-           (page->html page
-                       (list (list hl-segments "hl")
-                             (list bold-segments "b")
-                             (list italic-segments "i")))))))))
+(define (get-document-text conn id)
+  (let ([f (get-document-file conn id)])
+    (if (not (non-empty-string? f))
+        (displayln (~a "No pdf file downloaded for " id))
+        (let ([pagenum (pdf-count-pages f)])
+          (apply
+           string-append
+           (for/list ([i (in-range pagenum)])
+             (let ([page (pdf-page f i)])
+               (page-text page))))))))
 
+
+(define (mendeley-document->html conn id)
+  (let* ([f (get-document-file conn id)])
+    (if (not (non-empty-string? f))
+        (displayln (~a "No pdf file downloaded for " id))
+        (let ([pagenum (pdf-count-pages f)]
+              [hls (apply append (get-highlight-spec conn id))])
+          (apply
+           string-append
+           (for/list ([i (in-range pagenum)])
+             (let ([page (pdf-page f i)]
+                   [page-hl (filter
+                             (λ (page-hl)
+                               (= (first page-hl) (add1 i)))
+                             hls)])
+               (let ([hl-segments (page-hl->index-segments
+                                   page
+                                   (map (λ (l) (drop l 1)) page-hl))]
+                     [bold-segments (attr->index-segments
+                                     (page-attr page) "Bold")]
+                     [italic-segments (attr->index-segments
+                                       (page-attr page) "Italic")])
+                 (page->html page
+                             (list (list hl-segments "hl")
+                                   (list bold-segments "b")
+                                   (list italic-segments "i")))))))))))
 
 (module+ test
+  (define conn
+    (sqlite3-connect #:database "/home/hebi/.local/share/data/Mendeley Ltd./Mendeley Desktop/lihebi.com@gmail.com@www.mendeley.com.sqlite"
+                     #:mode 'read-only))
+
+  ;; (query-rows conn "select * from Groups")
+  ;; (query-rows conn "select * from FileHighlights")
+
   (define dirichlet-pdf (pdf-page "/home/hebi/.local/share/data/Mendeley%20Ltd./Mendeley%20Desktop/Downloaded/Blei,%20Ng,%20Jordan%20-%202012%20-%20Latent%20Dirichlet%20Allocation.pdf" 0))
   (define first-page-spec (first (get-highlight-spec 38)))
 
+  (get-highlight-text conn 38)
+
   (display-to-file
-   (mendeley-document->html 38)
+   (mendeley-document->html conn 41)
    "test.html"
    #:exists 'replace)
 
