@@ -33,24 +33,6 @@ ON Groups.id=RemoteDocuments.groupId
 "
 )
 
-(define (get-highlight-text)
-  (map (λ (hl)
-         (let ([f (substring (vector-ref hl 0) (string-length "file://"))]
-               [page (sub1 (vector-ref hl 1))]
-               [x1 (vector-ref hl 2)]
-               [y1 (vector-ref hl 3)]
-               [x2 (vector-ref hl 4)]
-               [y2 (vector-ref hl 5)]
-               [fid (vector-ref hl 6)]
-               [group (vector-ref hl 7)])
-           ;; (list f page x1 y1 x2 y2 fid group)
-           (let* ([pdf (pdf-page f page)]
-                  [height (second (page-size pdf))])
-             (page-text-in-rect pdf
-                                'glyph
-                                x1 (- height y1) x2 (- height y2)))))
-       (query-rows conn query)))
-
 (define (get-group-document-ids group-name)
   (let ([query (~a "SELECT documentId
             FROM RemoteDocuments
@@ -102,9 +84,12 @@ LEFT JOIN FileHighlightRects
 ON FileHighlightRects.highlightId=FileHighlights.id
 where Files.hash=\"" (get-document-hash id) "\"
 order by FileHighlightRects.page")])
-    (query-rows conn query)))
+    (query-rows conn query)
+    ;; group by pages
+    (group-by (λ (v) (first v))
+              (map vector->list (query-rows conn query)))))
 
-(get-highlight-spec 38)
+;; (get-highlight-spec 38)
 
 
 ;; 1. sort and partition highlights based on file and page
@@ -115,36 +100,48 @@ order by FileHighlightRects.page")])
 
 ;; Also, I want to get the font name and size.
 
-(define (visualize-highlight)
-  (let ([grouped-highlights
-         (map (λ (l)
-                (group-by (λ (v) (second v)) l))
-              (group-by (λ (v) (first v))
-                        (map vector->list (query-rows conn query))))])
-    (for/list ([file-hl (in-list grouped-highlights)])
-      
-      (let ([f (substring (first (first (first file-hl)))
-                          (string-length "file://"))])
-        (for/list ([page-hl (in-list file-hl)])
-          (let* ([p (sub1 (second (first page-hl)))]
-                 [pdf (pdf-page f p)]
-                 [view (page->pict pdf)]
-                 [height (second (page-size pdf))])
-            
-            (scale
-             (for/fold ([view view])
-                       ([hl (in-list page-hl)])
-               (match-let* ([(list x1 _y1 x2 _y2) (take (drop hl 2) 4)]
-                            [(list y1 y2) (list (- height _y1)
-                                                (- height _y2))])
-                 (println (page-text-in-rect pdf 'glyph x1 y2 x2 y1))
-                 (pin-over view x1 y2
-                           (cellophane
-                            (colorize
-                             (filled-rectangle (- x2 x1) (- _y2 _y1))
-                             "yellow")
-                            0.5))))
-             1.5)))))))
+
+(define (get-highlight-text id)
+  (let ([file-hl (get-highlight-spec id)]
+        [f (get-document-file id)])
+    (for/list ([page-hl (in-list file-hl)])
+      (let* ([p (sub1 (first (first page-hl)))]
+             [pdf (pdf-page f p)]
+             [view (page->pict pdf)])
+        (for/list ([hl (in-list page-hl)])
+          (match-let*
+              ([(list x1 y1 x2 y2)
+                (mendeley-rect->pdf-read-rect pdf (drop hl 1))])
+            (page-text-in-rect pdf 'glyph x1 y2 x2 y1)))))))
+
+(define (mendeley-rect->pdf-read-rect pdf rect)
+  (match-let ([(list x1 y1 x2 y2) rect])
+    (let ([height (second (page-size pdf))])
+      (list x1 (- height y1) x2 (- height y2)))))
+
+;; (get-highlight-text 38)
+
+(define (visualize-highlight id)
+  (let ([file-hl (get-highlight-spec id)]
+        [f (get-document-file id)])
+    (for/list ([page-hl (in-list file-hl)])
+      (let* ([p (sub1 (first (first page-hl)))]
+             [pdf (pdf-page f p)])
+        (scale
+         (for/fold ([view (page->pict pdf)])
+                   ([hl (in-list page-hl)])
+           (match-let*
+               ([(list x1 y1 x2 y2)
+                 (mendeley-rect->pdf-read-rect pdf (drop hl 1))])
+             (pin-over view x1 y2
+                       (cellophane
+                        (colorize
+                         (filled-rectangle (- x2 x1) (- y1 y2))
+                         "yellow")
+                        0.5))))
+         1.5)))))
+
+;; (visualize-highlight 38)
 
 
 ;; (page->pict "/home/hebi/Downloads/FSE_2018_paper_239.pdf")
@@ -158,7 +155,7 @@ order by FileHighlightRects.page")])
 (define (attr-test)
   (page-attr dirichlet-pdf))
 
-(length (page-text-with-layout dirichlet-pdf))
+;; (length (page-text-with-layout dirichlet-pdf))
 
 (define (add-empty-attr text-with-layout)
   (map (λ (l) (append l '(())))))
