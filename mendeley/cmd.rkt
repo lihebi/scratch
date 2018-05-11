@@ -32,23 +32,28 @@
         (let ([ids (get-group-document-ids
                     conn (cmd-group-name))])
           (for ([id ids])
-            (if (cmd-html)
-                (begin
-                  (displayln (~a "Generating " id ".html .."))
-                  (display-to-file
-                   (mendeley-document->html conn id)
-                   (~a id ".html")
-                   #:exists 'replace))
-                (begin
-                  (displayln (~a "Generating " id "-hl.txt and "
-                                 id  " -full.txt .."))
-                  (display-to-file
-                   (get-highlight-text conn id)
-                   (~a id "-hl.txt")
-                   #:exists 'replace)
-                  (display-to-file
-                   (get-document-text conn id)
-                   (~a id "-full.txt")
-                   #:exists 'replace)))))
+            (let ([f (get-document-file conn id)])
+              (when (non-empty-string? f)
+                (display-to-file
+                 f (~a id "-pdf-path.txt")
+                 #:exists 'replace)
+                (if (cmd-html)
+                    (begin
+                      (displayln (~a "Generating " id ".html .."))
+                      (display-to-file
+                       (mendeley-document->html conn id)
+                       (~a id ".html")
+                       #:exists 'replace))
+                    (begin
+                      (displayln (~a "Generating " id "-hl.txt and "
+                                     id  " -full.txt .."))
+                      (display-to-file
+                       (get-highlight-text conn id)
+                       (~a id "-hl.txt")
+                       #:exists 'replace)
+                      (display-to-file
+                       (get-document-text conn id)
+                       (~a id "-full.txt")
+                       #:exists 'replace)))))))
         (println "Invalid command. use --help to see available
 options")))
