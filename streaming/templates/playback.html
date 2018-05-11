@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title>Video Streaming Demonstration</title>
+  </head>
+  <body>
+    <h1>Saved Videos</h1>
+    {% for f in files %}
+    <h2> {{f}} </h2>
+    <video controls>
+      <source src="/static/{{f}}" type="video/mp4" />
+      <p>This browser does not support the video element.</p>
+    </video>
+    {% endfor %}
+  </body>
+</html>
