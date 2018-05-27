@@ -1,0 +1,17 @@
+#+TITLE: Tools for working with remarkable tablet
+
+Interface: 
+
+show content:
+1. scp all meta data from 10.11.99.1
+2. show (UUID, filename) pairs
+
+getpdf UUID
+
+- get UUID.pdf
+- get UUID.lines
+- rM2svg --coloured_annotations -i UUID.lines -o UUID
+- optional: transform
+- for *.svg do rsvg-convert -f pdf -o XXX.pdf XXX.svg
+- pdfunite *.pdf UUID_annot.pdf
+- pdftk UUID.pdf multistamp UUID_annot.pdf output final.pdf
