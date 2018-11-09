@@ -1,0 +1,32 @@
+#+TITLE: Generating Packaging in Fritzing parts
+
+
+* References
+- part file format: https://github.com/fritzing/fritzing-app/wiki/2.1-Part-file-format
+- Fritzing graphic standard: http://fritzing.org/fritzings-graphic-standards/
+- Fritzing template: http://fritzing.org/learning/tutorials/creating-custom-parts/download-fonts-and-templates/
+
+** Semiconductor packaging
+
+reference: https://learn.sparkfun.com/tutorials/integrated-circuits/all
+
+Mounting style:
+- Through-hole (PTH)
+- Surface-mount (SMD, SMT)
+
+The packaging:
+- Dual in-line packaging (DIP): pins are spaced by 0.1 inch (2.54 mm)
+- SMD/SMT packaging
+- Small-Outline (SOP):
+  - Small-outline IC (SOIC): this is surface-mount cousin of DIP
+  - Shrink small-outline Package (SSOP)
+  - Thin-shrink small-outline package (TSSOP)
+- Quad flat package (QFP)
+  - Thin (TQFP)
+  - Low-profile (LQFP)
+  - Quad-flat no-leads (QFN) package
+    - Thin (TQFN), Very thin (VQFN), Micro-lead (MLF)
+- Ball Grid Array (BGA) package
+- SW
+- TO
+
