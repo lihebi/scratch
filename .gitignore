@@ -3,3 +3,12 @@ build
 *.o
 *.hi
 Main
+
+*.zip
+*.jpg
+*.jpeg
+*.gif
+*.png
+*.svg
+*.h5
+events.out.*
