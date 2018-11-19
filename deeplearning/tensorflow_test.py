@@ -79,6 +79,161 @@ def tf_cpu_gpu_comparison():
     print('GPU speedup over CPU: {}x'.format(int(cpu_time/gpu_time)))
 
     sess.close()
+    return
+
+def test_tensor():
+    """To figure out what is tensor
+
+    Available tensor types:
+    - tf.Variable
+    - tf.constant
+    - tf.placeholder
+    """
+    # Build a dataflow graph.
+    c = tf.constant([[1.0, 2.0], [3.0, 4.0]])
+    d = tf.constant([[1.0, 1.0], [0.0, 1.0]])
+    e = tf.matmul(c, d)
+    c
+    x = tf.reduce_sum(e)
+    y = tf.negative(x)
+    c.shape
+    e.shape
+    x.shape
+    yabs = tf.abs(x)
+
+    # Construct a `Session` to execute the graph.
+    sess = tf.Session()
+
+    # Execute the graph and store the value that `e` represents in `result`.
+    result = sess.run(e)
+    sess.run(x)
+    sess.run(e)
+    sess.run(y)
+    sess.run(yabs)
+    # after registering default session, you can use e.eval() to
+    # compute the value
+    with tf.Session():
+        print (e.eval())
+    with sess:
+        print(e.eval())
+
+    # this produce events.out.tfevents.{timestamp}.{hostname}
+    writer = tf.summary.FileWriter('.')
+    writer.add_graph(tf.get_default_graph())
+    # now, run tensorboard --logdit .
+
+    # of course we can feed in placeholders, instead of constants
+    x = tf.placeholder(tf.float32)
+    y = tf.placeholder(tf.float32)
+    z = x + y
+    sess.run(z, feed_dict={x: 3, y: 4.5})
+    # since feed_dict is the 2nd parameters by position, it can be
+    # omitted like this:
+    sess.run(z, {x: 3, y: 4.5})
+    sess.run(z, feed_dict={x: [1, 3], y: [2, 4]})
+
+    # for more complicated data, we are not using placeholders, but
+    # tf.data API
+    my_data = [[0, 1,], [2, 3,], [4, 5,], [6, 7,],]
+    slices = tf.data.Dataset.from_tensor_slices(my_data)
+    next_item = slices.make_one_shot_iterator().get_next()
+    # the first four times, we get the data
+    sess.run(next_item)
+    sess.run(next_item)
+    sess.run(next_item)
+    sess.run(next_item)
+    # this time, throw tf.errors.OutOfRangeError
+    sess.run(next_item)
+    # or we can see this in the loop
+    while True:
+      try:
+        print(sess.run(next_item))
+      except tf.errors.OutOfRangeError:
+        break
+    # random sample
+    r = tf.random_normal([10,3])
+    # as expected, each run will produce a different data
+    sess.run(r)
+    sess.run(r)    
+    return
+
+def test_tensor_layer():
+    sess = tf.Session()
+    # place holder input
+    x = tf.placeholder(tf.float32, shape=[None, 3])
+    # a linear layer
+    linear_model = tf.layers.Dense(units=1)
+    y = linear_model(x)
+    # initializers
+    init = tf.global_variables_initializer()
+    # Seems this will initialize all parameters to random values.
+    # Each run of initialization will produce different parameters,
+    # thus will produce different output for y.
+    #
+    # If not initializing, the y will be same.
+    #
+    # If not running initizliation at all, it will through this error:
+    #
+    # FailedPreconditionError: Attempting to use uninitialized value
+    sess.run(init)
+    sess.run(y, {x: [[1, 2, 3],[4, 5, 6]]})
+    #
+    #
+    # Now let's train a simple model
+    x = tf.constant([[1], [2], [3], [4]], dtype=tf.float32)
+    y_true = tf.constant([[0], [-1], [-2], [-3]], dtype=tf.float32)
+    # lineear model
+    linear_model = tf.layers.Dense(units=1)
+    y_pred = linear_model(x)
+    # now, we define our loss
+    loss = tf.losses.mean_squared_error(labels=y_true, predictions=y_pred)
+    # the optimizer
+    optimizer = tf.train.GradientDescentOptimizer(0.01)
+    # this train is an OPERATOR, not a tensor. It will build all
+    # computation graph components necessary for the
+    # optimization. When it runs, it will not output its value (it
+    # does not have a value). Instead, it will update the variables
+    # (weights?) in the graph.
+    train = optimizer.minimize(loss)
+
+    init = tf.global_variables_initializer()
+    sess = tf.Session()
+    sess.run(init)
+    # this is a random prediction
+    print(sess.run(y_pred))
+    # now we run it 100 times
+    for i in range(1000):
+        # since teh train is an op, not a tensor, it does not have a
+        # value. Thus the loss here is for visualizing the progress
+        # only.
+        _, loss_value = sess.run((train, loss))
+        if i % 100 == 0:
+            print(loss_value)
+    # now, since the graph variables (weights?) are updated, we can
+    # get a better prediction
+    print(sess.run(y_pred))
+
+
+def tensor_eager():
+    # now is false
+    tf.executing_eagerly()
+    # this must be called before any tensorflow functions, including
+    # the above predicate
+    tf.enable_eager_execution()
+    # now it is true
+    tf.executing_eagerly()
+    x = [[2.]]
+    # this will immediately start a session and do the
+    # computation. The output is still a tensor, but this time with a
+    # specific value.
+    m = tf.matmul(x, x)
+    print("hello, {}".format(m))
+    a = tf.constant([[1, 2],
+                 [3, 4]])
+    a
+    tf.matmul(a, a)
+    return
+
 
 def main():
     pass
