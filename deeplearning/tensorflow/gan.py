@@ -265,12 +265,14 @@ def conditional_discriminator_fn(img, conditioning, weight_decay=2.5e-5):
         return layers.linear(net, 1)
 def conditional():   
     noise_dims = 64
+    # FIXME (HEBI: one hot label creation)
     real_images = prepare_data()
     conditional_gan_model = tfgan.gan_model(
-        # (HEBI: This is the only difference)
+        # (HEBI: using the conditional generator and discriminator)
         generator_fn=conditional_generator_fn,
         discriminator_fn=conditional_discriminator_fn,
         real_data=real_images,
+        # (HEBI: the one hot label is used as input)
         generator_inputs=(tf.random_normal([batch_size, noise_dims]), 
                           one_hot_labels))
 
@@ -357,7 +359,7 @@ def infogan():
     # Dimensions of the structured and unstructured noise dimensions.
     cat_dim, cont_dim, noise_dims = 10, 2, 64
 
-    # (HEBI: Only difference)
+    # (HEBI: using infogan generator)
     generator_fn = functools.partial(infogan_generator, categorical_dim=cat_dim)
     discriminator_fn = functools.partial(
         infogan_discriminator, categorical_dim=cat_dim,
@@ -374,6 +376,7 @@ def infogan():
     infogan_loss = tfgan.gan_loss(
         infogan_model,
         gradient_penalty_weight=1.0,
+        # (HEBI: the mutual information penalty!!)
         mutual_information_penalty_weight=1.0)
 
     # Sanity check that we can evaluate our losses.
@@ -391,8 +394,6 @@ def infogan():
         gan_train_ops,
         hooks=[tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps)],
         logdir=FLAGS.train_log_dir)
-
-
 
 def load_from_checkpoint():
     """FIXME this is not runnable.
@@ -533,7 +534,7 @@ def infogan():
         mutual_information_penalty_weight=1.0)
 
     # The rest is the same as in the unconditional case.
-    ...
+    # ...
     
 def custom_model():
     # Set up the input pipeline.
