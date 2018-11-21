@@ -14,6 +14,7 @@ from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 batch_size = 128
 num_classes = 10
@@ -23,6 +24,27 @@ epochs = 5
 # input image dimensions
 nrows, ncols = 28, 28
 input_shape = (nrows, ncols, 1)
+
+# (insert-image (create-image "/etc/alternatives/emacs-128x128.png"))
+
+def visualize(data):
+    plt.imshow(data, cmap='Greys')
+    # plt.show()
+
+    # Save to a file:
+    # pylab.ioff()
+    # plot([1, 2, 3])
+    # savefig("/tmp/test.png")
+    return
+
+def test_visualize():
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    image_index = 7777 # You may select anything up to 60,000
+    print(y_train[image_index]) # The label is 8
+    image_data = x_train[image_index]
+    visualize(image_data)
+    return
+    
 
 def prepare_data():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
