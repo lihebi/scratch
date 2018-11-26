@@ -5,16 +5,23 @@ import json
 import random
 import json
 
+import matplotlib.pyplot as plt
+
+from keras.models import Sequential
+from keras.preprocessing.sequence import pad_sequences
+from keras import layers
+
 import os, sys
 
 sys.path.append('/home/hebi/github/reading/bert')
 sys.path.append('/home/hebi/github/scratch/deeplearning/anti-rouge')
 
 import tokenization
-from vocab import Vocab
+from vocab import Vocab, PAD_TOKEN
 
 
-vocab_file = '/home/hebi/Downloads/uncased_L-12_H-768_A-12/vocab.txt'
+# vocab_file = '/home/hebi/Downloads/uncased_L-12_H-768_A-12/vocab.txt'
+vocab_file = '/home/hebi/github/reading/cnn-dailymail/finished_files/vocab'
 
 cnndm_dir = '/home/hebi/github/reading/cnn-dailymail/'
 cnn_dir = os.path.join(cnndm_dir, 'data/cnn/stroies')
@@ -123,7 +130,9 @@ def preprocess_data():
 
     This runs pretty slow
     """
-    vocab = Vocab('/home/hebi/github/reading/cnn-dailymail/finished_files/vocab', 200000)
+    print('Doing nothing.')
+    return 0
+    vocab = Vocab(vocab_file, 200000)
 
     # 92,579 stories
     stories = os.listdir(cnn_tokenized_dir)
@@ -154,14 +163,120 @@ def preprocess_data():
         with open(summary_f, 'w') as fout:
             json.dump(pairs, fout, indent=4)
 
+def encode(sentence, vocab):
+    """Using vocab encoding
+    """
+    words = sentence.split()
+    return [vocab.word2id(w) for w in words]
+
+def encode(sentence, vocab):
+    """Using sentence encoding
+    """
+    words = sentence.split()
+    return [vocab.word2id(w) for w in words]
+
+def encode(sentence, vocab):
+    """Using word embedding
+    """
+    words = sentence.split()
+    return [vocab.word2id(w) for w in words]
+
+def decode(ids, vocab):
+    return ' '.join([vocab.id2word(i) for i in ids])
 
 def prepare_data():
     """
     1. define a batch
     2. load a batch
     3. return as (article, summary) pairs?
+
+    1. load all stories and summaries
+    2. convert stories and summaries into vectors, according to vocab
+    3. trunk or pad with MAX_LEN
+    3. return (article, summary, score)
     """
-    pass
+    article_data = []
+    summary_data = []
+    score_data = []
+    # 90,000 > 2,000
+    vocab = Vocab(vocab_file, 200000)
+    hebi_dir = os.path.join(cnndm_dir, 'hebi')
+    hebi_sample_dir = os.path.join(cnndm_dir, 'hebi-sample')
+    data_dir = hebi_sample_dir
+    # data_dir = hebi_dir
+    ct = 0
+    for s in os.listdir(data_dir):
+        ct+=1
+        if ct % 100 == 0:
+            print ('--', ct)
+        article_f = os.path.join(data_dir, s, 'article.txt')
+        summary_f = os.path.join(data_dir, s, 'summary.json')
+        article_content = ' '.join(read_text_file(article_f))
+        article_encoding = encode(article_content, vocab)
+        with open(summary_f, 'r') as f:
+            summaries = json.load(f)
+            for summary,score,_ in summaries:
+                article_data.append(article_encoding)
+                summary_data.append(encode(summary, vocab))
+                score_data.append(score)
+    print('converting to numpy array ..')
+    score_data = np.array(score_data)
+    summary_data = np.array(summary_data)
+    article_data = np.array(article_data)
+
+    # plt.plot([len(v) for v in summary_data])
+    # plt.hist([len(v) for v in article_data])
+
+    print('padding ..')
+    article_data_padded = pad_sequences(article_data,
+                                        value=vocab.word2id(PAD_TOKEN),
+                                        padding='post',
+                                        maxlen=512)
+    summary_data_padded = pad_sequences(summary_data,
+                                        value=vocab.word2id(PAD_TOKEN),
+                                        padding='post',
+                                        maxlen=100)
+    # x = np.array([np.concatenate((a,s)) for a,s in zip(article_data_padded, summary_data_padded)])
+    print('concatenating ..')
+    x = np.concatenate((article_data_padded, summary_data_padded),
+                       axis=1)
+    # np.concatenate((([1,2]), np.array([3])))
+    # np.concatenate(([1,2], [3], [4,5,6]))
+    y = score_data
+    x.shape                     # (21000,768)
+    y.shape                     # (21000,)
+    # split x and y in training and testing
+    split_at = len(x) // 10
+    x_train = x[split_at:]
+    x_val = x[:split_at]
+    y_train = y[split_at:]
+    y_val = y[:split_at]
+    return (x_train, y_train), (x_val, y_val)
+
+def build_model():
+    """The model contains:
+    """
+    model = Sequential()
+    # Adds a densely-connected layer with 64 units to the model:
+    model.add(layers.Dense(64,
+                           # input_shape=(768,),
+                           activation='relu'))
+    # Add another:
+    model.add(layers.Dense(64, activation='relu'))
+    # Add a softmax layer with 10 output units:
+    # model.add(layers.Dense(10, activation='softmax'))
+    # output the score
+    model.add(layers.Dense(1, activation='sigmoid'))
+
+    # x = Conv1D(128, 5, activation='relu')(embedded_sequences)
+    # x = MaxPooling1D(5)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = MaxPooling1D(5)(x)
+    # x = Conv1D(128, 5, activation='relu')(x)
+    # x = GlobalMaxPooling1D()(x)
+    # x = Dense(128, activation='relu')(x)
+    
+    return model
 
 def main():
     """Steps:
@@ -181,7 +296,25 @@ def main():
     article? Then, fully connected layer directly to the final result.
 
     """
-    pass
+
+    (x_train, y_train), (x_val, y_val) = prepare_data()
+    x_train.shape
+    y_train.shape
+    x_val.shape
+    y_val.shape
+    model = build_model()
+    optimizer = tf.train.RMSPropOptimizer(0.001)
+    # optimizer=tf.train.AdamOptimizer(0.01)
+    model.compile(optimizer=optimizer,
+                  # loss='binary_crossentropy',
+                  loss='mse',
+                  # metrics=['accuracy']
+                  metrics=['mae'])
+    model.fit(x_train, y_train,
+              epochs=40, batch_size=32,
+              validation_data=(x_val, y_val), verbose=1)
+    model.summary()
+    # results = model.evaluate(x_test, y_test)
 
 def sentence_embedding():
     module_url = "https://tfhub.dev/google/universal-sentence-encoder/2"
