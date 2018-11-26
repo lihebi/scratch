@@ -10,15 +10,19 @@ from keras.models import Model
 from keras.initializers import Constant
 
 BASE_DIR = 'examples/data'
+BASE_DIR = '/home/hebi/github/reading/keras/examples/data'
+# '/home/hebi/Downloads/glove.6B'
 GLOVE_DIR = os.path.join(BASE_DIR, 'glove.6B')
 TEXT_DATA_DIR = os.path.join(BASE_DIR, '20_newsgroup')
 MAX_SEQUENCE_LENGTH = 1000
 MAX_NUM_WORDS = 20000
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
+NUM_CLASS = 20
 
-
-def prepare_data():
+def load_text_data():
+    """Return (texts, labels)
+    """
     texts = []  # list of text samples
     labels_index = {}  # dictionary mapping label name to numeric id
     labels = []  # list of label ids
@@ -40,15 +44,29 @@ def prepare_data():
                     labels.append(label_id)
 
     print('Found %s texts.' % len(texts))
+    return texts, labels
 
+def prepare_tokenizer(texts):
+    """Tokenizer needs to fit on the given text. Then, we can use it to
+    obtain:
+
+    1. tokenizer.texts_to_sequences (texts)
+    2. tokenizer.word_index
+
+    """
     # finally, vectorize the text samples into a 2D integer tensor
     tokenizer = Tokenizer(num_words=MAX_NUM_WORDS)
     tokenizer.fit_on_texts(texts)
+    return tokenizer
+
+def prepare_data(texts, labels, tokenizer):
+    """
+    1. use tokenizer to convert texts to sequences
+    2. convert labels to categorical value
+    3. construct np.array
+    4. devide into training and validation data
+    """
     sequences = tokenizer.texts_to_sequences(texts)
-
-    word_index = tokenizer.word_index
-    print('Found %s unique tokens.' % len(word_index))
-
     data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
 
     labels = to_categorical(np.asarray(labels))
@@ -68,8 +86,24 @@ def prepare_data():
     y_val = labels[-num_validation_samples:]
     return (x_train, y_train), (x_val, y_val)
 
-def load_embedding():
+def load_embedding(tokenizer):
+    """1. read glove.6B.100d embedding matrix
+    
+    2. from tokenizer, get the number of words, use it (with a MAX
+    value) as the dimension of embedding matrix.
+    
+    3. for all the words in the tokenizer, (as long as its index is
+    less than MAX value), fill the embedding matrix with its glove
+    value
+
+    4. from the matrix, create a embedding layer by pass the matrix as
+    embeddings_initializer. This layer is fixed by setting it not
+    trainable.
+
+    """
     print('Indexing word vectors.')
+    word_index = tokenizer.word_index
+    # print('Found %s unique tokens.' % len(word_index))
 
     embeddings_index = {}
     with open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt')) as f:
@@ -100,11 +134,9 @@ def load_embedding():
                                 trainable=False)
     return embedding_layer
 
-def build_model():
+def build_model(embedding_layer):
     # train a 1D convnet with global maxpooling
     sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
-    # (HEBI: Load Embedding layer)
-    embedding_layer = load_embedding()
     embedded_sequences = embedding_layer(sequence_input)
     x = Conv1D(128, 5, activation='relu')(embedded_sequences)
     x = MaxPooling1D(5)(x)
@@ -113,14 +145,18 @@ def build_model():
     x = Conv1D(128, 5, activation='relu')(x)
     x = GlobalMaxPooling1D()(x)
     x = Dense(128, activation='relu')(x)
-    preds = Dense(len(labels_index), activation='softmax')(x)
+    preds = Dense(NUM_CLASS, activation='softmax')(x)
 
     model = Model(sequence_input, preds)
     return model
 
 def main():
-    (x_train, y_train), (x_test, y_test) = prepare_data()
-    model = build_model()
+    texts, labels = load_text_data()
+    tokenizer = prepare_tokenizer(texts)
+    (x_train, y_train), (x_val, y_val) = prepare_data(texts, labels, tokenizer)
+    # (HEBI: Load Embedding layer)
+    embedding_layer = load_embedding(tokenizer)
+    model = build_model(embedding_layer)
     model.compile(loss='categorical_crossentropy',
                   optimizer='rmsprop',
                   metrics=['acc'])
