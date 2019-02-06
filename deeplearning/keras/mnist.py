@@ -12,6 +12,7 @@ from keras.datasets import mnist
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import SimpleRNN
 
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -317,7 +318,15 @@ def test_database_api():
         model.fit(epochs=epochs,
                   steps_per_epoch=steps_per_epoch)
         return model
-
+if __name__ == '__main__':
+    (x_train, y_train), (x_test, y_test) = prepare_data()
+    model = cnn_model()
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=keras.optimizers.Adadelta(),
+                  metrics=['accuracy'])
+    model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs,
+              verbose=1, validation_data=(x_test, y_test))
+    
 def main():
     # either one
     (x_train, y_train), (x_test, y_test) = prepare_data()

@@ -2,14 +2,21 @@
 
 """
 Source is models/research/gan/tutorial.ipynb
+
+More sources:
+- https://github.com/eriklindernoren/Keras-GAN
+- https://github.com/eriklindernoren/PyTorch-GAN
+- https://github.com/pytorch/examples/tree/master/dcgan
+- https://github.com/wiseodd/generative-models
+
 """
 
 
 import sys
 
-sys.path.append('/home/hebi/github/reading/models/research/gan')
-sys.path.append('/home/hebi/github/reading/models/research/')
-sys.path.append('/home/hebi/github/reading/models/research/slim')
+sys.path.append('/home/hebi/github/reading/tensorflow-models/research/gan')
+sys.path.append('/home/hebi/github/reading/tensorflow-models/research/')
+sys.path.append('/home/hebi/github/reading/tensorflow-models/research/slim')
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,6 +32,13 @@ from mnist import util
 # TF-Slim data provider.
 from datasets import download_and_convert_mnist
 
+queues = tf.contrib.slim.queues
+layers = tf.contrib.layers
+ds = tf.contrib.distributions
+framework = tf.contrib.framework
+
+leaky_relu = lambda net: tf.nn.leaky_relu(net, alpha=0.01)
+
 def visualize_digits(tensor_to_visualize):
     """Visualize an image once. Used to visualize generator before training.
     
@@ -33,7 +47,7 @@ def visualize_digits(tensor_to_visualize):
     """
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        with queues.QueueRunners(sess):
+        with tf.contrib.slim.queues.QueueRunners(sess):
             images_np = sess.run(tensor_to_visualize)
     plt.axis('off')
     plt.imshow(np.squeeze(images_np), cmap='gray')
