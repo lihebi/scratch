@@ -1,0 +1,39 @@
+#+TITLE: Causal Discovery Playground
+
+
+R packages:
+- https://cran.r-project.org/web/packages/SELF/index.html
+
+Need to install the following R packages:
+- pcalg: =install.packages('pcalg')=
+- backShift
+- InvariantCausalPrediction
+- CompareCausalNetworks
+
+#+BEGIN_EXAMPLE
+source("http://bioconductor.org/biocLite.R") 
+biocLite("RBGL")
+#+END_EXAMPLE
+
+
+* TODO CausalDiscoveryToolbox (in python)
+https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox
+
+* InvariantCausalPrediction (ICP)
+- R package:
+  https://cran.r-project.org/web/packages/InvariantCausalPrediction/index.html
+
+But this still needs to know which data belongs to which exp (but not
+necessary what is the exp).
+
+* backShift
+
+- backshift: https://cran.r-project.org/web/packages/backShift/index.html
+- github: https://github.com/christinaheinze/backShift
+
+* CompareCausalNetworks
+This seems to be a code base for testing all algorithms. Take a look
+first.
+
+- github: https://github.com/christinaheinze/CompareCausalNetworks
+- R: https://cran.r-project.org/web/packages/CompareCausalNetworks/index.html
