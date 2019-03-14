@@ -12,6 +12,13 @@ def test_tf():
     sess = tf.Session()
     print(sess.run(hello))
 
+    from tensorflow.python.client import device_lib
+    print (device_lib.list_local_devices())
+    # os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"]="2"
+    1+1
+    # (python-shell-send-string "1+1")
+
 
 def test_keras():
     mnist = tf.keras.datasets.mnist
@@ -24,6 +31,7 @@ def test_keras():
       tf.keras.layers.Dropout(0.2),
       tf.keras.layers.Dense(10, activation=tf.nn.softmax)
     ])
+    # model = tf.keras.utils.multi_gpu_model(model, gpus=2)
     model.compile(optimizer='adam',
                   loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])

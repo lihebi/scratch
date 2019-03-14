@@ -43,7 +43,15 @@ def test_visualize():
     image_index = 7777 # You may select anything up to 60,000
     print(y_train[image_index]) # The label is 8
     image_data = x_train[image_index]
+    image_data
+    plt.imshow(image_data)
+    plt.show()
     visualize(image_data)
+
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    image_index = 7777 # You may select anything up to 60,000
+    print(y_train[image_index]) # The label is 8
+    plt.imshow(x_train[image_index], cmap='Greys')
     return
     
 
