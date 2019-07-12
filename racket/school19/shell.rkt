@@ -1,0 +1,3 @@
+#lang pfsh
+
+(ls -l)
